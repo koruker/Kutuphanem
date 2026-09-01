@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#1B2430">
+<meta name="screen-orientation" content="portrait">
+<title>Kütüphanem</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kütüphanem">
+<style>
+  :root{
+    --ink:#1B2430;
+    --ink-2:#232D3B;
+    --paper:#F3EAD8;
+    --paper-2:#EAE0CB;
+    --brass:#B98B4E;
+    --brass-2:#D9AE73;
+    --maroon:#6E2A38;
+    --charcoal:#2A2420;
+    --line:rgba(42,36,32,0.14);
+    --serif: "Iowan Old Style","Palatino Linotype","URW Palladio L",Palatino,Georgia,serif;
+    --sans: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%; height:100dvh; width:100%; overscroll-behavior:none;}
+  body{
+    margin:0;
+    background:var(--ink);
+    color:var(--paper);
+    font-family:var(--sans);
+    overflow:hidden;
+    position:fixed;
+    inset:0;
+    touch-action:manipulation;
+  }
+  #app{position:absolute; inset:0; display:flex; flex-direction:column;}
+
+  /* Portrait-only: iOS/Safari can't be force-locked from a web page, so we
+     block interaction with a full-screen notice whenever the device is
+     rotated to landscape instead. */
+  #rotateGate{
+    display:none; position:fixed; inset:0; z-index:999; background:var(--ink);
+    color:var(--paper); align-items:center; justify-content:center; flex-direction:column;
+    gap:14px; text-align:center; padding:30px;
+  }
+  @media (orientation:landscape) and (max-height:600px){
+    #rotateGate{display:flex;}
+  }
+  #rotateGate svg{width:56px; height:56px; opacity:0.7;}
+  #rotateGate p{font-family:var(--serif); font-size:16px; max-width:260px; line-height:1.5; margin:0;}
+  button{font-family:inherit; border:none; background:none; color:inherit; cursor:pointer;}
+  button:active{opacity:0.7;}
+  ::selection{background:var(--brass); color:var(--ink);}
+
+  /* ---------- LIBRARY ---------- */
+  #view-library{position:absolute; inset:0; display:flex; flex-direction:column; background:
+    radial-gradient(1200px 600px at 20% -10%, #263041 0%, var(--ink) 55%);
+  }
+  .topbar{
+    padding: calc(18px + var(--safe-top)) 22px 14px;
+    display:flex; align-items:baseline; justify-content:space-between;
+    border-bottom:1px solid rgba(255,255,255,0.07);
+  }
+  .brand{font-family:var(--serif); font-size:26px; letter-spacing:0.3px; color:var(--paper);}
+  .brand em{font-style:italic; color:var(--brass-2);}
+  .subcount{font-size:12.5px; color:rgba(243,234,216,0.5); margin-top:2px;}
+  .scan-fab{
+    width:46px; height:46px; border-radius:50%;
+    background:var(--brass); color:var(--ink);
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 6px 16px rgba(185,139,78,0.35);
+    flex-shrink:0;
+  }
+  .scan-fab svg{width:22px; height:22px;}
+
+  #shelf{flex:1; overflow-y:auto; padding:22px 20px calc(40px + var(--safe-bottom));}
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(112px,1fr));
+    gap:22px 16px;
+  }
+  .book-card{display:flex; flex-direction:column; gap:8px; text-align:left;}
+  .spine{
+    position:relative; aspect-ratio:3/4.2; border-radius:3px 7px 7px 3px;
+    background:linear-gradient(135deg,#3a2f2a,#241c18);
+    box-shadow: -3px 0 0 rgba(0,0,0,0.35) inset, 0 10px 18px rgba(0,0,0,0.4);
+    overflow:hidden;
+    border:1px solid rgba(0,0,0,0.4);
+  }
+  .spine img{width:100%; height:100%; object-fit:cover; display:block; opacity:0.96;}
+  .spine .spine-edge{position:absolute; left:0; top:0; bottom:0; width:9px; background:linear-gradient(90deg, rgba(255,255,255,0.15), rgba(0,0,0,0.25));}
+  .spine .no-cover{width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:rgba(243,234,216,0.35); font-family:var(--serif); font-size:34px;}
+  .book-title{font-family:var(--serif); font-size:14.5px; line-height:1.25; color:var(--paper);}
+  .book-meta{font-size:11px; color:rgba(243,234,216,0.45);}
+
+  .empty-state{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px; text-align:center; gap:18px;}
+  .empty-state svg{width:88px; height:88px; opacity:0.5;}
+  .empty-state h2{font-family:var(--serif); font-weight:400; font-size:21px; margin:0; color:var(--paper);}
+  .empty-state p{margin:0; font-size:14px; color:rgba(243,234,216,0.55); max-width:260px; line-height:1.5;}
+  .cta-btn{
+    margin-top:6px; background:var(--brass); color:var(--ink); font-size:14.5px; font-weight:600;
+    padding:12px 26px; border-radius:999px;
+  }
+
+  /* ---------- READER ---------- */
+  #view-reader{position:absolute; inset:0; background:#0F1216; display:none; flex-direction:column;}
+  #view-reader.active{display:flex;}
+  .reader-top{
+    padding: calc(14px + var(--safe-top)) 14px 10px; display:flex; align-items:center; gap:10px;
+    background:linear-gradient(#0F1216, rgba(15,18,22,0.0));
+    position:relative; z-index:5;
+  }
+  .icon-btn{width:38px; height:38px; display:flex; align-items:center; justify-content:center; border-radius:50%; color:var(--paper);}
+  .icon-btn svg{width:20px; height:20px;}
+  .reader-title{flex:1; min-width:0;}
+  .reader-title .t{font-family:var(--serif); font-size:15px; color:var(--paper); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .reader-title .p{font-size:11px; color:rgba(243,234,216,0.45); margin-top:1px;}
+
+  .stage-wrap{flex:1; position:relative; display:flex; align-items:center; justify-content:center; padding:6px 14px; overflow:hidden;}
+  .book-stage{
+    position:relative; width:100%; height:100%; max-width:560px;
+    perspective:2400px;
+  }
+  .leaf{
+    position:absolute; inset:0; border-radius:2px;
+    box-shadow:0 18px 40px rgba(0,0,0,0.55);
+    background:#e9e2d0; overflow:hidden;
+  }
+  .leaf img{width:100%; height:100%; object-fit:contain; background:#e9e2d0; display:block;}
+  .leaf.base{z-index:1;}
+  .leaf-empty{width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:rgba(0,0,0,0.3); font-family:var(--serif);}
+
+  .flip{
+    position:absolute; inset:0; transform-style:preserve-3d;
+    transform-origin:left center; z-index:3; will-change:transform;
+  }
+  .flip .face{position:absolute; inset:0; backface-visibility:hidden; border-radius:2px; overflow:hidden; background:#e9e2d0;}
+  .flip .face img{width:100%; height:100%; object-fit:contain; display:block;}
+  .flip .front{transform:rotateY(0deg);}
+  .flip .back{transform:rotateY(180deg);}
+  .flip .shade{position:absolute; inset:0; background:linear-gradient(90deg, rgba(0,0,0,0.28), rgba(0,0,0,0) 40%); opacity:0; pointer-events:none;}
+
+  .tap-zone{position:absolute; top:0; bottom:0; width:26%; z-index:4;}
+  .tap-zone.left{left:0;}
+  .tap-zone.right{right:0;}
+
+  .reader-bottom{padding:10px 16px calc(14px + var(--safe-bottom)); display:flex; align-items:center; justify-content:center; gap:18px;}
+  .dot-track{font-size:11.5px; color:rgba(243,234,216,0.5); letter-spacing:0.5px;}
+  .add-page-btn{
+    display:flex; align-items:center; gap:8px; background:rgba(185,139,78,0.16); color:var(--brass-2);
+    border:1px solid rgba(185,139,78,0.4); padding:9px 18px; border-radius:999px; font-size:13px; font-weight:600;
+  }
+  .add-page-btn svg{width:15px; height:15px;}
+
+  /* ---------- SCAN ---------- */
+  #view-scan{position:absolute; inset:0; background:#000; display:none; flex-direction:column; z-index:20;}
+  #view-scan.active{display:flex;}
+  .scan-top{
+    padding: calc(14px + var(--safe-top)) 16px 10px; display:flex; align-items:center; justify-content:space-between; color:var(--paper); z-index:2;
+  }
+  .scan-top .count{font-size:13px; color:rgba(243,234,216,0.65);}
+  .camera-wrap{flex:1; position:relative; background:#111; overflow:hidden;}
+  #camVideo{width:100%; height:100%; object-fit:cover; display:block;}
+  .cam-fallback{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:14px; padding:30px; text-align:center; color:rgba(243,234,216,0.7);}
+  .guide-frame{position:absolute; inset:6% 5%; border:1.5px dashed rgba(243,234,216,0.55); border-radius:8px; pointer-events:none;}
+  .scan-bottom{padding:22px 20px calc(26px + var(--safe-bottom)); display:flex; align-items:center; justify-content:center; gap:36px;}
+  .shutter{
+    width:70px; height:70px; border-radius:50%; background:var(--paper); border:4px solid rgba(243,234,216,0.35);
+  }
+  .side-btn{width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,0.1); color:var(--paper); display:flex; align-items:center; justify-content:center;}
+  .side-btn svg{width:20px; height:20px;}
+  input#galleryInput{display:none;}
+
+  /* ---------- CROP ---------- */
+  #view-crop{position:absolute; inset:0; background:#0B0D10; display:none; flex-direction:column; z-index:21; height:100dvh;}
+  #view-crop.active{display:flex;}
+  .crop-top{padding: calc(14px + var(--safe-top)) 16px 8px; display:flex; align-items:center; justify-content:space-between; color:var(--paper); flex-shrink:0;}
+  .crop-top button{font-size:14px; color:var(--brass-2); font-weight:600; display:flex; align-items:center; gap:6px; padding:6px;}
+  .crop-tools{display:flex; gap:6px;}
+  .crop-tools button{width:38px; height:38px; border-radius:50%; background:rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center;}
+  .crop-tools button svg{width:18px; height:18px; color:var(--paper);}
+
+  .crop-stage{flex:1 1 auto; position:relative; min-height:0; overflow:hidden; touch-action:none;}
+  #cropViewport{position:absolute; inset:0; overflow:hidden; background:#15181c; touch-action:none;}
+  #cropImg{position:absolute; left:0; top:0; transform-origin:top left; display:block; user-select:none; -webkit-user-drag:none; pointer-events:none; will-change:transform;}
+  .crop-dim{position:absolute; inset:0; pointer-events:none;}
+  .crop-dim i{position:absolute; display:block; background:rgba(0,0,0,0.55);}
+  .crop-rect{position:absolute; border:1.5px solid var(--brass-2); box-shadow:0 0 0 1px rgba(0,0,0,0.4); touch-action:none;}
+  .crop-rect .third{position:absolute; background:rgba(243,234,216,0.35);}
+  .crop-rect .third.v1{left:33.333%; top:0; bottom:0; width:1px;}
+  .crop-rect .third.v2{left:66.666%; top:0; bottom:0; width:1px;}
+  .crop-rect .third.h1{top:33.333%; left:0; right:0; height:1px;}
+  .crop-rect .third.h2{top:66.666%; left:0; right:0; height:1px;}
+  .handle{position:absolute; width:30px; height:30px; margin:-15px; touch-action:none;}
+  .handle::after{content:""; position:absolute; inset:9px; border-radius:50%; background:var(--brass-2); border:2px solid #14171b;}
+  .hint{position:absolute; left:0; right:0; bottom:10px; text-align:center; font-size:11.5px; color:rgba(243,234,216,0.55); pointer-events:none;}
+
+  .filters-row{display:flex; gap:10px; padding:12px 16px; overflow-x:auto; flex-shrink:0;}
+  .filter-chip{flex-shrink:0; padding:8px 16px; border-radius:999px; font-size:12.5px; background:rgba(255,255,255,0.08); color:rgba(243,234,216,0.7); border:1px solid transparent;}
+  .filter-chip.on{background:rgba(185,139,78,0.2); color:var(--brass-2); border-color:rgba(185,139,78,0.5);}
+  .crop-bottom{padding:6px 20px calc(18px + var(--safe-bottom)); display:flex; gap:12px; flex-shrink:0;}
+  .btn-outline{flex:1; padding:13px; border-radius:12px; border:1px solid rgba(243,234,216,0.25); color:var(--paper); font-size:14px;}
+  .btn-solid{flex:1.4; padding:13px; border-radius:12px; background:var(--brass); color:var(--ink); font-size:14px; font-weight:700;}
+
+  /* ---------- MISC ---------- */
+  .sheet-mask{position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:30; display:none; align-items:flex-end;}
+  .sheet-mask.active{display:flex;}
+  .sheet{background:var(--paper-2); color:var(--charcoal); width:100%; border-radius:18px 18px 0 0; padding:20px 20px calc(20px + var(--safe-bottom));}
+  .sheet h3{margin:0 0 14px; font-family:var(--serif); font-weight:400; font-size:17px;}
+  .sheet input[type=text]{width:100%; padding:12px; border-radius:10px; border:1px solid var(--line); font-size:15px; font-family:inherit; background:#fff;}
+  .sheet-actions{display:flex; gap:10px; margin-top:16px;}
+  .sheet-actions button{flex:1; padding:12px; border-radius:10px; font-size:14px;}
+  .sheet-actions .save{background:var(--ink); color:var(--paper); font-weight:600;}
+  .sheet-actions .cancel{background:rgba(0,0,0,0.06);}
+  .sheet-actions .danger{background:var(--maroon); color:#fff; font-weight:600;}
+
+  .toast{position:fixed; left:50%; bottom:calc(30px + var(--safe-bottom)); transform:translateX(-50%); background:rgba(20,20,20,0.92); color:#fff; padding:10px 18px; border-radius:999px; font-size:13px; z-index:60; opacity:0; pointer-events:none; transition:opacity .25s;}
+  .toast.show{opacity:1;}
+
+  @media (prefers-reduced-motion: reduce){
+    .flip{transition:none !important;}
+  }
+</style>
+</head>
+<body>
+<div id="rotateGate">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M18 8l3 3-3 3" transform="translate(-1,-3) rotate(90 12 12)"/></svg>
+  <p>Kütüphanem sadece dikey konumda kullanılır. Devam etmek için telefonunu döndür.</p>
+</div>
+<div id="app">
+
+  <!-- LIBRARY -->
+  <div id="view-library">
+    <div class="topbar">
+      <div>
+        <div class="brand">Kütüphan<em>em</em></div>
+        <div class="subcount" id="shelfCount">Kütüphane boş</div>
+      </div>
+      <button class="scan-fab" id="btnNewBook" aria-label="Yeni kitap tara">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+    </div>
+    <div id="shelf">
+      <div class="grid" id="grid"></div>
+    </div>
+  </div>
+
+  <!-- READER -->
+  <div id="view-reader">
+    <div class="reader-top">
+      <button class="icon-btn" id="btnBackLib" aria-label="Kütüphaneye dön">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div class="reader-title">
+        <div class="t" id="readerTitle">—</div>
+        <div class="p" id="readerPage">—</div>
+      </div>
+      <button class="icon-btn" id="btnBookMenu" aria-label="Kitap seçenekleri">
+        <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+      </button>
+    </div>
+    <div class="stage-wrap">
+      <div class="book-stage" id="bookStage">
+        <div class="leaf base" id="baseLeaf"><div class="leaf-empty">Sayfa yok</div></div>
+        <div class="tap-zone left" id="zoneLeft"></div>
+        <div class="tap-zone right" id="zoneRight"></div>
+      </div>
+    </div>
+    <div class="reader-bottom">
+      <button class="add-page-btn" id="btnAddPage">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        Sayfa ekle
+      </button>
+    </div>
+  </div>
+
+  <!-- SCAN (camera) -->
+  <div id="view-scan">
+    <div class="scan-top">
+      <button class="icon-btn" id="btnScanClose" aria-label="Kapat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+      <div class="count" id="scanCount">0 sayfa tarandı</div>
+      <div style="width:38px;"></div>
+    </div>
+    <div class="camera-wrap">
+      <video id="camVideo" autoplay playsinline muted></video>
+      <div class="guide-frame" id="guideFrame"></div>
+      <div class="cam-fallback" id="camFallback" style="display:none;">
+        <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7l1.5-3h5L16 7"/><circle cx="12" cy="13.5" r="3.4"/></svg>
+        <div>Kamera açılamadı. Galeriden seçebilirsin.</div>
+      </div>
+    </div>
+    <div class="scan-bottom">
+      <button class="side-btn" id="btnGallery" aria-label="Galeriden seç">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+      </button>
+      <button class="shutter" id="btnShutter" aria-label="Fotoğraf çek"></button>
+      <button class="side-btn" id="btnScanDone" aria-label="Bitir">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+      </button>
+    </div>
+    <input type="file" id="galleryInput" accept="image/*" capture="environment" multiple>
+  </div>
+
+  <!-- CROP -->
+  <div id="view-crop">
+    <div class="crop-top">
+      <button id="btnCropCancel">Vazgeç</button>
+      <div class="crop-tools">
+        <button id="btnCropFlip" aria-label="Aynala">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M17 7l3 3-3 3M7 7l-3 3 3 3"/></svg>
+        </button>
+        <button id="btnCropRotate" aria-label="Döndür">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
+        </button>
+        <button id="btnCropReset" aria-label="Sıfırla">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v6h6"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="crop-stage">
+      <div id="cropViewport">
+        <canvas id="cropImg"></canvas>
+        <div class="crop-dim">
+          <i id="dimTop"></i><i id="dimBottom"></i><i id="dimLeft"></i><i id="dimRight"></i>
+        </div>
+        <div class="crop-rect" id="cropRect">
+          <div class="third v1"></div><div class="third v2"></div>
+          <div class="third h1"></div><div class="third h2"></div>
+        </div>
+        <div class="handle" id="hTL"></div>
+        <div class="handle" id="hTR"></div>
+        <div class="handle" id="hBL"></div>
+        <div class="handle" id="hBR"></div>
+      </div>
+      <div class="hint">İki parmakla yakınlaştır · köşelerden kırpma alanını ayarla</div>
+    </div>
+    <div class="filters-row">
+      <button class="filter-chip on" data-filter="none">Orijinal</button>
+      <button class="filter-chip" data-filter="bw">Siyah-Beyaz Tarama</button>
+      <button class="filter-chip" data-filter="enhance">Netleştir</button>
+    </div>
+    <div class="crop-bottom">
+      <button class="btn-outline" id="btnCropSkip">Kırpmadan kaydet</button>
+      <button class="btn-solid" id="btnCropSave">Sayfayı kaydet</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Bottom sheet (rename / delete) -->
+<div class="sheet-mask" id="sheetMask">
+  <div class="sheet">
+    <h3 id="sheetTitle">Kitap adı</h3>
+    <input type="text" id="bookNameInput" placeholder="ör. Fizik Ders Notları">
+    <div class="sheet-actions">
+      <button class="cancel" id="sheetCancel">Vazgeç</button>
+      <button class="save" id="sheetSave">Kaydet</button>
+    </div>
+    <div class="sheet-actions" id="deleteRow" style="display:none;">
+      <button class="danger" id="sheetDelete" style="width:100%;">Kitabı sil</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============ INDEXEDDB ============ */
+const DB_NAME = "ciltli-db", DB_VER = 1;
+let db;
+function openDB(){
+  return new Promise((resolve,reject)=>{
+    const req = indexedDB.open(DB_NAME, DB_VER);
+    req.onupgradeneeded = (e)=>{
+      const d = e.target.result;
+      if(!d.objectStoreNames.contains("books")){
+        d.createObjectStore("books",{keyPath:"id"});
+      }
+      if(!d.objectStoreNames.contains("pages")){
+        const s = d.createObjectStore("pages",{keyPath:"id"});
+        s.createIndex("bookId","bookId",{unique:false});
+      }
+    };
+    req.onsuccess = ()=>{ db = req.result; resolve(db); };
+    req.onerror = ()=> reject(req.error);
+  });
+}
+function tx(store, mode){ return db.transaction(store, mode).objectStore(store); }
+function idbGetAll(store){
+  return new Promise((res,rej)=>{
+    const r = tx(store,"readonly").getAll();
+    r.onsuccess = ()=>res(r.result); r.onerror=()=>rej(r.error);
+  });
+}
+function idbGetAllByIndex(store, index, key){
+  return new Promise((res,rej)=>{
+    const r = tx(store,"readonly").index(index).getAll(key);
+    r.onsuccess = ()=>res(r.result); r.onerror=()=>rej(r.error);
+  });
+}
+function idbPut(store, val){
+  return new Promise((res,rej)=>{
+    const r = tx(store,"readwrite").put(val);
+    r.onsuccess = ()=>res(val); r.onerror=()=>rej(r.error);
+  });
+}
+function idbDelete(store, key){
+  return new Promise((res,rej)=>{
+    const r = tx(store,"readwrite").delete(key);
+    r.onsuccess = ()=>res(); r.onerror=()=>rej(r.error);
+  });
+}
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+
+/* ============ STATE ============ */
+let books = [];           // {id,title,createdAt}
+let pagesByBook = {};      // bookId -> [{id,bookId,order,blob}]
+let currentBookId = null;
+let currentIndex = 0;
+let scanTargetBookId = null;
+let activeFilter = "none";
+let stream = null;
+
+const $ = (sel)=>document.querySelector(sel);
+const els = {
+  viewLibrary: $("#view-library"), viewReader: $("#view-reader"),
+  viewScan: $("#view-scan"), viewCrop: $("#view-crop"),
+  grid: $("#grid"), shelfCount: $("#shelfCount"),
+  readerTitle: $("#readerTitle"), readerPage: $("#readerPage"),
+  bookStage: $("#bookStage"), baseLeaf: $("#baseLeaf"),
+  camVideo: $("#camVideo"), camFallback: $("#camFallback"), guideFrame: $("#guideFrame"),
+  scanCount: $("#scanCount"), galleryInput: $("#galleryInput"),
+  cropImg: $("#cropImg"), cropViewport: $("#cropViewport"), cropRect: $("#cropRect"),
+  sheetMask: $("#sheetMask"), sheetTitle: $("#sheetTitle"), bookNameInput: $("#bookNameInput"),
+  deleteRow: $("#deleteRow"), toast: $("#toast")
+};
+
+function toast(msg){
+  els.toast.textContent = msg;
+  els.toast.classList.add("show");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(()=>els.toast.classList.remove("show"), 1800);
+}
+
+/* ============ VIEW SWITCH ============ */
+function showView(name){
+  els.viewLibrary.style.display = name==="library" ? "flex" : "none";
+  els.viewReader.classList.toggle("active", name==="reader");
+  els.viewScan.classList.toggle("active", name==="scan");
+  els.viewCrop.classList.toggle("active", name==="crop");
+  if(name!=="scan") stopCamera();
+}
+
+/* ============ LOAD & RENDER LIBRARY ============ */
+async function loadLibrary(){
+  books = await idbGetAll("books");
+  books.sort((a,b)=>b.createdAt-a.createdAt);
+  pagesByBook = {};
+  for(const b of books){
+    const pages = await idbGetAllByIndex("pages","bookId",b.id);
+    pages.sort((a,b2)=>a.order-b2.order);
+    pagesByBook[b.id] = pages;
+  }
+  renderLibrary();
+}
+
+let libraryCoverUrls = [];
+function renderLibrary(){
+  libraryCoverUrls.forEach(u=>URL.revokeObjectURL(u));
+  libraryCoverUrls = [];
+  els.grid.innerHTML = "";
+  if(books.length === 0){
+    els.shelfCount.textContent = "Kütüphane boş";
+    els.grid.innerHTML = "";
+    const empty = document.createElement("div");
+    empty.className = "empty-state";
+    empty.style.gridColumn = "1/-1";
+    empty.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3 5.5C3 4.7 3.7 4 5 4c3 0 5.5 1 7 2.5V19C10.5 17.5 8 16.5 5 16.5c-1.3 0-2 .7-2 1.5V5.5Z"/><path d="M21 5.5c0-.8-.7-1.5-2-1.5-3 0-5.5 1-7 2.5V19c1.5-1.5 4-2.5 7-2.5 1.3 0 2 .7 2 1.5V5.5Z"/></svg>
+      <h2>Raf henüz boş</h2>
+      <p>İlk kitabını tara: sayfaları fotoğrafla, kırp, kütüphanene ekle. Her şey telefonunda kalır.</p>
+      <button class="cta-btn" id="btnEmptyScan">İlk kitabı tara</button>`;
+    els.grid.parentElement.appendChild(empty);
+    empty.querySelector("#btnEmptyScan").addEventListener("click", startNewBookFlow);
+    return;
+  }
+  const stale = els.grid.parentElement.querySelector(".empty-state");
+  if(stale) stale.remove();
+  els.shelfCount.textContent = books.length + (books.length===1 ? " kitap" : " kitap");
+  for(const b of books){
+    const pages = pagesByBook[b.id] || [];
+    const card = document.createElement("button");
+    card.className = "book-card";
+    const coverUrl = pages[0] ? URL.createObjectURL(pages[0].blob) : null;
+    if(coverUrl) libraryCoverUrls.push(coverUrl);
+    card.innerHTML = `
+      <div class="spine">
+        <div class="spine-edge"></div>
+        ${coverUrl ? `<img src="${coverUrl}" alt="">` : `<div class="no-cover">${(b.title||"?").charAt(0).toUpperCase()}</div>`}
+      </div>
+      <div class="book-title">${escapeHtml(b.title || "Adsız kitap")}</div>
+      <div class="book-meta">${pages.length} sayfa</div>`;
+    card.addEventListener("click", ()=>openBook(b.id));
+    els.grid.appendChild(card);
+  }
+}
+function escapeHtml(s){ const d=document.createElement("div"); d.textContent=s; return d.innerHTML; }
+
+/* ============ READER ============ */
+function openBook(bookId){
+  currentBookId = bookId;
+  currentIndex = 0;
+  const book = books.find(b=>b.id===bookId);
+  els.readerTitle.textContent = book ? book.title : "Kitap";
+  showView("reader");
+  renderPage();
+}
+
+function currentPages(){ return pagesByBook[currentBookId] || []; }
+
+let lastBaseUrl = null;
+function setBaseLeaf(url){
+  if(lastBaseUrl) URL.revokeObjectURL(lastBaseUrl);
+  lastBaseUrl = url;
+}
+
+function renderPage(){
+  const pages = currentPages();
+  const book = books.find(b=>b.id===currentBookId);
+  els.readerTitle.textContent = book ? book.title : "";
+  if(pages.length === 0){
+    els.baseLeaf.innerHTML = `<div class="leaf-empty">Bu kitapta henüz sayfa yok</div>`;
+    els.readerPage.textContent = "0 / 0";
+    return;
+  }
+  currentIndex = Math.max(0, Math.min(currentIndex, pages.length-1));
+  const url = URL.createObjectURL(pages[currentIndex].blob);
+  setBaseLeaf(url);
+  els.baseLeaf.innerHTML = `<img src="${url}" alt="Sayfa ${currentIndex+1}">`;
+  els.readerPage.textContent = (currentIndex+1) + " / " + pages.length;
+}
+
+function flipTo(direction){
+  const pages = currentPages();
+  if(pages.length === 0) return;
+  const targetIndex = currentIndex + direction;
+  if(targetIndex < 0 || targetIndex >= pages.length) return;
+  if(document.querySelector(".flip")) return; // animation in progress
+
+  const flip = document.createElement("div");
+  flip.className = "flip";
+  const stage = els.bookStage;
+
+  if(direction === 1){
+    const curUrl = URL.createObjectURL(pages[currentIndex].blob);
+    const nextUrl = URL.createObjectURL(pages[targetIndex].blob);
+    flip.innerHTML = `
+      <div class="face front"><img src="${curUrl}"></div>
+      <div class="face back"><img src="${nextUrl}"></div>
+      <div class="shade"></div>`;
+    flip.style.transform = "rotateY(0deg)";
+    stage.appendChild(flip);
+    setBaseLeaf(nextUrl);
+    els.baseLeaf.innerHTML = `<img src="${nextUrl}">`; // ready underneath
+    requestAnimationFrame(()=>{
+      flip.style.transition = "transform 480ms cubic-bezier(.4,.1,.2,1)";
+      flip.querySelector(".shade").style.transition = "opacity 480ms";
+      flip.style.transform = "rotateY(-180deg)";
+      flip.querySelector(".shade").style.opacity = "0.9";
+    });
+    flip.addEventListener("transitionend", function done(e){
+      if(e.propertyName !== "transform") return;
+      flip.removeEventListener("transitionend", done);
+      flip.remove();
+      URL.revokeObjectURL(curUrl);
+      currentIndex = targetIndex;
+      els.readerPage.textContent = (currentIndex+1) + " / " + pages.length;
+    });
+  } else {
+    const prevUrl = URL.createObjectURL(pages[targetIndex].blob);
+    const curUrl = URL.createObjectURL(pages[currentIndex].blob);
+    flip.innerHTML = `
+      <div class="face front"><img src="${prevUrl}"></div>
+      <div class="face back"><img src="${curUrl}"></div>
+      <div class="shade"></div>`;
+    flip.style.transform = "rotateY(-180deg)";
+    flip.querySelector(".shade").style.opacity = "0.9";
+    stage.appendChild(flip);
+    requestAnimationFrame(()=>{
+      flip.style.transition = "transform 480ms cubic-bezier(.4,.1,.2,1)";
+      flip.querySelector(".shade").style.transition = "opacity 480ms";
+      flip.style.transform = "rotateY(0deg)";
+      flip.querySelector(".shade").style.opacity = "0";
+    });
+    flip.addEventListener("transitionend", function done(e){
+      if(e.propertyName !== "transform") return;
+      flip.removeEventListener("transitionend", done);
+      flip.remove();
+      currentIndex = targetIndex;
+      setBaseLeaf(prevUrl);
+      els.baseLeaf.innerHTML = `<img src="${prevUrl}">`;
+      URL.revokeObjectURL(curUrl);
+      els.readerPage.textContent = (currentIndex+1) + " / " + pages.length;
+    });
+  }
+}
+
+$("#zoneRight").addEventListener("click", ()=>flipTo(1));
+$("#zoneLeft").addEventListener("click", ()=>flipTo(-1));
+$("#btnBackLib").addEventListener("click", ()=>{ showView("library"); loadLibrary(); });
+
+/* swipe support */
+(function(){
+  let startX=null, startY=null;
+  els.bookStage.addEventListener("touchstart",(e)=>{
+    startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+  },{passive:true});
+  els.bookStage.addEventListener("touchend",(e)=>{
+    if(startX===null) return;
+    const dx = e.changedTouches[0].clientX - startX;
+    const dy = e.changedTouches[0].clientY - startY;
+    if(Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)){
+      flipTo(dx < 0 ? 1 : -1);
+    }
+    startX=null; startY=null;
+  },{passive:true});
+})();
+
+/* ============ BOOK MENU (rename/delete) ============ */
+$("#btnBookMenu").addEventListener("click", ()=>{
+  const book = books.find(b=>b.id===currentBookId);
+  els.sheetTitle.textContent = "Kitap ayarları";
+  els.bookNameInput.value = book ? book.title : "";
+  els.deleteRow.style.display = "flex";
+  els.sheetMask.classList.add("active");
+});
+$("#sheetCancel").addEventListener("click", ()=> els.sheetMask.classList.remove("active"));
+$("#sheetMask").addEventListener("click",(e)=>{ if(e.target===els.sheetMask) els.sheetMask.classList.remove("active"); });
+$("#sheetSave").addEventListener("click", async ()=>{
+  const name = els.bookNameInput.value.trim();
+  if(!name){ toast("Bir isim gir"); return; }
+  if(currentBookId && els.viewReader.classList.contains("active")){
+    const book = books.find(b=>b.id===currentBookId);
+    book.title = name;
+    await idbPut("books", book);
+    els.readerTitle.textContent = name;
+  } else if(pendingNewBookId){
+    const book = books.find(b=>b.id===pendingNewBookId);
+    if(book){ book.title = name; await idbPut("books", book); }
+  }
+  els.sheetMask.classList.remove("active");
+});
+$("#sheetDelete").addEventListener("click", async ()=>{
+  if(!currentBookId) return;
+  const pages = await idbGetAllByIndex("pages","bookId",currentBookId);
+  for(const p of pages) await idbDelete("pages", p.id);
+  await idbDelete("books", currentBookId);
+  els.sheetMask.classList.remove("active");
+  showView("library");
+  await loadLibrary();
+  toast("Kitap silindi");
+});
+
+/* ============ NEW BOOK / SCAN FLOW ============ */
+let pendingNewBookId = null;
+$("#btnNewBook").addEventListener("click", startNewBookFlow);
+function startNewBookFlow(){
+  els.sheetTitle.textContent = "Yeni kitap";
+  els.bookNameInput.value = "";
+  els.deleteRow.style.display = "none";
+  pendingNewBookId = null;
+  els.sheetMask.classList.add("active");
+  els.sheetMask.dataset.mode = "new";
+}
+// override save behavior for "new book" mode
+const originalSave = $("#sheetSave");
+originalSave.addEventListener("click", async ()=>{
+  if(els.sheetMask.dataset.mode === "new"){
+    const name = els.bookNameInput.value.trim() || "Adsız kitap";
+    const book = {id: uid(), title: name, createdAt: Date.now()};
+    await idbPut("books", book);
+    books.unshift(book);
+    pagesByBook[book.id] = [];
+    scanTargetBookId = book.id;
+    els.sheetMask.dataset.mode = "";
+    els.sheetMask.classList.remove("active");
+    openScanner(book.id);
+  }
+});
+
+$("#btnAddPage").addEventListener("click", ()=> openScanner(currentBookId));
+
+async function openScanner(bookId){
+  scanTargetBookId = bookId;
+  showView("scan");
+  updateScanCount();
+  await startCamera();
+}
+function updateScanCount(){
+  const n = (pagesByBook[scanTargetBookId] || []).length;
+  els.scanCount.textContent = n + (n===1 ? " sayfa tarandı" : " sayfa tarandı");
+}
+
+$("#btnScanClose").addEventListener("click", async ()=>{
+  showView("library");
+  await loadLibrary();
+});
+$("#btnScanDone").addEventListener("click", async ()=>{
+  if(currentBookId === scanTargetBookId || els.viewReader.classList.contains("active")){
+    showView("reader");
+    renderPage();
+  } else {
+    openBook(scanTargetBookId);
+  }
+});
+
+/* ---- camera ---- */
+async function startCamera(){
+  els.camFallback.style.display = "none";
+  els.camVideo.style.display = "block";
+  try{
+    stream = await navigator.mediaDevices.getUserMedia({
+      video:{ facingMode:{ideal:"environment"}, width:{ideal:1920}, height:{ideal:1080} },
+      audio:false
+    });
+    els.camVideo.srcObject = stream;
+  }catch(err){
+    els.camVideo.style.display = "none";
+    els.camFallback.style.display = "flex";
+  }
+}
+function stopCamera(){
+  if(stream){ stream.getTracks().forEach(t=>t.stop()); stream = null; }
+}
+
+$("#btnShutter").addEventListener("click", ()=>{
+  if(!stream){ els.galleryInput.click(); return; }
+  const video = els.camVideo;
+  const canvas = document.createElement("canvas");
+  canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(video, 0, 0);
+  canvas.toBlob((blob)=>{ openCrop(blob); }, "image/jpeg", 0.92);
+});
+$("#btnGallery").addEventListener("click", ()=> els.galleryInput.click());
+els.galleryInput.addEventListener("change", (e)=>{
+  const files = Array.from(e.target.files || []);
+  if(files.length) openCrop(files[0]);
+  els.galleryInput.value = "";
+});
+
+/* ============ CROP ============
+   #cropImg is a <canvas> holding the "baked" working image (rotation and
+   mirror applied). It is displayed at (pos.left, pos.top) and CSS-scaled
+   by fitScale*userScale. The crop rectangle lives in fixed viewport pixel
+   coordinates, independent of image size/orientation, so it always matches
+   what's on screen regardless of device size (fixes the old overflow bug). */
+let sourceBitmap = null;   // pristine decoded photo, never mutated
+let rotationDeg = 0;       // 0/90/180/270, re-baked from sourceBitmap each time
+let flipped = false;
+let naturalW = 0, naturalH = 0; // baked canvas size
+let fitScale = 1;          // "cover" scale at userScale=1
+let userScale = 1;         // 1..5, user pinch zoom
+let pos = {left:0, top:0}; // baked canvas position in viewport px
+let rect = {x:0,y:0,w:0,h:0}; // crop rectangle in viewport px
+
+function bakeWorkingCanvas(){
+  const sw = sourceBitmap.width, sh = sourceBitmap.height;
+  const rotated = rotationDeg % 180 !== 0;
+  naturalW = rotated ? sh : sw;
+  naturalH = rotated ? sw : sh;
+  els.cropImg.width = naturalW;
+  els.cropImg.height = naturalH;
+  const ctx = els.cropImg.getContext("2d");
+  ctx.save();
+  ctx.clearRect(0,0,naturalW,naturalH);
+  ctx.translate(naturalW/2, naturalH/2);
+  ctx.rotate(rotationDeg * Math.PI/180);
+  if(flipped) ctx.scale(-1,1);
+  ctx.drawImage(sourceBitmap, -sw/2, -sh/2);
+  ctx.restore();
+}
+
+function vp(){ return {w: els.cropViewport.clientWidth, h: els.cropViewport.clientHeight}; }
+
+function clampPos(){
+  const {w:vpW, h:vpH} = vp();
+  const w = naturalW*fitScale*userScale, h = naturalH*fitScale*userScale;
+  pos.left = Math.min(0, Math.max(vpW - w, pos.left));
+  pos.top = Math.min(0, Math.max(vpH - h, pos.top));
+}
+
+function applyViewTransform(){
+  els.cropImg.style.transform = `translate(${pos.left}px, ${pos.top}px) scale(${fitScale*userScale})`;
+}
+
+function resetCropRect(){
+  const {w:vpW, h:vpH} = vp();
+  const mx = vpW*0.05, my = vpH*0.05;
+  rect = {x:mx, y:my, w:vpW-2*mx, h:vpH-2*my};
+  layoutCropRect();
+}
+
+function layoutCropRect(){
+  const {w:vpW, h:vpH} = vp();
+  els.cropRect.style.left = rect.x+"px"; els.cropRect.style.top = rect.y+"px";
+  els.cropRect.style.width = rect.w+"px"; els.cropRect.style.height = rect.h+"px";
+  $("#hTL").style.left=rect.x+"px"; $("#hTL").style.top=rect.y+"px";
+  $("#hTR").style.left=(rect.x+rect.w)+"px"; $("#hTR").style.top=rect.y+"px";
+  $("#hBL").style.left=rect.x+"px"; $("#hBL").style.top=(rect.y+rect.h)+"px";
+  $("#hBR").style.left=(rect.x+rect.w)+"px"; $("#hBR").style.top=(rect.y+rect.h)+"px";
+  $("#dimTop").style.cssText   = `left:0; top:0; width:${vpW}px; height:${rect.y}px;`;
+  $("#dimBottom").style.cssText= `left:0; top:${rect.y+rect.h}px; width:${vpW}px; height:${Math.max(0,vpH-rect.y-rect.h)}px;`;
+  $("#dimLeft").style.cssText  = `left:0; top:${rect.y}px; width:${rect.x}px; height:${rect.h}px;`;
+  $("#dimRight").style.cssText = `left:${rect.x+rect.w}px; top:${rect.y}px; width:${Math.max(0,vpW-rect.x-rect.w)}px; height:${rect.h}px;`;
+}
+
+function resetView(){
+  const {w:vpW, h:vpH} = vp();
+  if(vpW===0 || vpH===0 || !naturalW) return;
+  fitScale = Math.max(vpW/naturalW, vpH/naturalH);
+  userScale = 1;
+  const w = naturalW*fitScale, h = naturalH*fitScale;
+  pos.left = (vpW-w)/2; pos.top = (vpH-h)/2;
+  clampPos();
+  applyViewTransform();
+  resetCropRect();
+}
+
+function openCrop(blob){
+  showView("crop");
+  activeFilter = "none";
+  document.querySelectorAll(".filter-chip").forEach(c=>c.classList.toggle("on", c.dataset.filter==="none"));
+  createImageBitmap(blob).then((bmp)=>{
+    if(sourceBitmap){ try{ sourceBitmap.close(); }catch(e){} }
+    sourceBitmap = bmp;
+    rotationDeg = 0; flipped = false;
+    bakeWorkingCanvas();
+    requestAnimationFrame(()=> requestAnimationFrame(resetView)); // wait for layout to settle
+  }).catch(()=> toast("Fotoğraf açılamadı"));
+}
+
+window.addEventListener("resize", ()=>{ if(els.viewCrop.classList.contains("active")) resetView(); });
+
+/* ---- pan + pinch-zoom on the photo ---- */
+const activePointers = new Map();
+let panStart = null, pinchStartDist = null, pinchStartScale = 1, pinchStartPos = null, pinchFocal = null;
+function dist(a,b){ return Math.hypot(a.x-b.x, a.y-b.y); }
+
+els.cropViewport.addEventListener("pointerdown",(e)=>{
+  if(e.target.closest(".handle")) return;
+  e.preventDefault();
+  els.cropViewport.setPointerCapture(e.pointerId);
+  activePointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
+  if(activePointers.size === 1){
+    panStart = {x:e.clientX, y:e.clientY, left:pos.left, top:pos.top};
+  } else if(activePointers.size === 2){
+    const pts = [...activePointers.values()];
+    pinchStartDist = dist(pts[0], pts[1]);
+    pinchStartScale = userScale;
+    pinchStartPos = {...pos};
+    const vpRect = els.cropViewport.getBoundingClientRect();
+    pinchFocal = {x:(pts[0].x+pts[1].x)/2 - vpRect.left, y:(pts[0].y+pts[1].y)/2 - vpRect.top};
+  }
+});
+els.cropViewport.addEventListener("pointermove",(e)=>{
+  if(!activePointers.has(e.pointerId)) return;
+  activePointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
+  if(activePointers.size === 1 && panStart){
+    pos.left = panStart.left + (e.clientX - panStart.x);
+    pos.top = panStart.top + (e.clientY - panStart.y);
+    clampPos();
+    applyViewTransform();
+  } else if(activePointers.size === 2 && pinchStartDist){
+    const pts = [...activePointers.values()];
+    const d = dist(pts[0], pts[1]);
+    let newScale = Math.max(1, Math.min(5, pinchStartScale * (d/pinchStartDist)));
+    const oldW = naturalW*fitScale*pinchStartScale, oldH = naturalH*fitScale*pinchStartScale;
+    const relX = (pinchFocal.x - pinchStartPos.left)/oldW, relY = (pinchFocal.y - pinchStartPos.top)/oldH;
+    const newW = naturalW*fitScale*newScale, newH = naturalH*fitScale*newScale;
+    pos.left = pinchFocal.x - relX*newW;
+    pos.top = pinchFocal.y - relY*newH;
+    userScale = newScale;
+    clampPos();
+    applyViewTransform();
+  }
+});
+function endPointer(e){
+  activePointers.delete(e.pointerId);
+  pinchStartDist = null;
+  if(activePointers.size === 1){
+    const [p] = activePointers.values();
+    panStart = {x:p.x, y:p.y, left:pos.left, top:pos.top};
+  } else {
+    panStart = null;
+  }
+}
+els.cropViewport.addEventListener("pointerup", endPointer);
+els.cropViewport.addEventListener("pointercancel", endPointer);
+
+/* ---- crop rectangle handles (fixed viewport-pixel space) ---- */
+function makeDraggable(handle, corner){
+  handle.addEventListener("pointerdown",(e)=>{
+    e.preventDefault(); e.stopPropagation();
+    handle.setPointerCapture(e.pointerId);
+    const vpRect = els.cropViewport.getBoundingClientRect();
+    const minSize = 56;
+    const move = (ev)=>{
+      let x = Math.max(0, Math.min(vpRect.width, ev.clientX - vpRect.left));
+      let y = Math.max(0, Math.min(vpRect.height, ev.clientY - vpRect.top));
+      if(corner === "tl"){
+        rect.w = Math.max(minSize, rect.x + rect.w - x);
+        rect.h = Math.max(minSize, rect.y + rect.h - y);
+        rect.x = Math.min(x, rect.x + rect.w - minSize);
+        rect.y = Math.min(y, rect.y + rect.h - minSize);
+      } else if(corner === "tr"){
+        rect.w = Math.max(minSize, x - rect.x);
+        rect.h = Math.max(minSize, rect.y + rect.h - y);
+        rect.y = Math.min(y, rect.y + rect.h - minSize);
+      } else if(corner === "bl"){
+        rect.w = Math.max(minSize, rect.x + rect.w - x);
+        rect.x = Math.min(x, rect.x + rect.w - minSize);
+        rect.h = Math.max(minSize, y - rect.y);
+      } else if(corner === "br"){
+        rect.w = Math.max(minSize, x - rect.x);
+        rect.h = Math.max(minSize, y - rect.y);
+      }
+      layoutCropRect();
+    };
+    const up = (ev)=>{
+      handle.releasePointerCapture(e.pointerId);
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  });
+}
+makeDraggable($("#hTL"),"tl"); makeDraggable($("#hTR"),"tr");
+makeDraggable($("#hBL"),"bl"); makeDraggable($("#hBR"),"br");
+
+document.querySelectorAll(".filter-chip").forEach(chip=>{
+  chip.addEventListener("click", ()=>{
+    activeFilter = chip.dataset.filter;
+    document.querySelectorAll(".filter-chip").forEach(c=>c.classList.toggle("on", c===chip));
+  });
+});
+
+$("#btnCropRotate").addEventListener("click", ()=>{
+  rotationDeg = (rotationDeg + 90) % 360;
+  bakeWorkingCanvas();
+  resetView();
+});
+$("#btnCropFlip").addEventListener("click", ()=>{
+  flipped = !flipped;
+  bakeWorkingCanvas();
+  resetView();
+});
+$("#btnCropReset").addEventListener("click", ()=>{
+  rotationDeg = 0; flipped = false;
+  bakeWorkingCanvas();
+  resetView();
+});
+$("#btnCropCancel").addEventListener("click", ()=>{
+  if(sourceBitmap){ try{ sourceBitmap.close(); }catch(e){} sourceBitmap = null; }
+  showView("scan");
+});
+
+function filterString(){
+  if(activeFilter === "bw") return "grayscale(1) contrast(1.35) brightness(1.12)";
+  if(activeFilter === "enhance") return "contrast(1.2) saturate(1.08) brightness(1.05)";
+  return "none";
+}
+
+function exportPage(useCropBox){
+  let sx=0, sy=0, sw=naturalW, sh=naturalH;
+  if(useCropBox){
+    const total = fitScale*userScale;
+    sx = (rect.x - pos.left)/total;
+    sy = (rect.y - pos.top)/total;
+    sw = rect.w/total;
+    sh = rect.h/total;
+    sx = Math.max(0, Math.min(naturalW-1, sx));
+    sy = Math.max(0, Math.min(naturalH-1, sy));
+    sw = Math.max(1, Math.min(naturalW-sx, sw));
+    sh = Math.max(1, Math.min(naturalH-sy, sh));
+  }
+  const out = document.createElement("canvas");
+  out.width = sw; out.height = sh;
+  const ctx = out.getContext("2d");
+  ctx.filter = filterString();
+  ctx.drawImage(els.cropImg, sx, sy, sw, sh, 0, 0, sw, sh);
+  return new Promise((resolve)=> out.toBlob((blob)=>resolve(blob), "image/jpeg", 0.9));
+}
+
+async function saveCroppedPage(useCropBox){
+  const blob = await exportPage(useCropBox);
+  const pages = pagesByBook[scanTargetBookId] || [];
+  const page = {id: uid(), bookId: scanTargetBookId, order: pages.length, blob};
+  await idbPut("pages", page);
+  pages.push(page);
+  pagesByBook[scanTargetBookId] = pages;
+  updateScanCount();
+  toast("Sayfa kaydedildi");
+  if(sourceBitmap){ try{ sourceBitmap.close(); }catch(e){} sourceBitmap = null; }
+  showView("scan");
+  await startCamera();
+}
+$("#btnCropSave").addEventListener("click", ()=> saveCroppedPage(true));
+$("#btnCropSkip").addEventListener("click", ()=> saveCroppedPage(false));
+
+/* ============ INIT ============ */
+async function init(){
+  await openDB();
+  await loadLibrary();
+  if("serviceWorker" in navigator){
+    navigator.serviceWorker.register("sw.js").catch(()=>{});
+  }
+  if(screen.orientation && screen.orientation.lock){
+    screen.orientation.lock("portrait").catch(()=>{}); // no-op on iOS Safari; CSS rotate-gate covers it
+  }
+}
+init();
+
+})();
+</script>
+</body>
+</html>
