@@ -1,0 +1,14 @@
+{
+  "name": "Ciltli — Kişisel Kitap Tarayıcı",
+  "short_name": "Ciltli",
+  "description": "Kitaplarını sayfa sayfa tarayıp telefonunda saklayan kişisel kütüphane uygulaması.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1B2430",
+  "theme_color": "#1B2430",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
