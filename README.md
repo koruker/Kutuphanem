@@ -39,7 +39,7 @@ fotoğraf gitmez. iPhone'da, sadece dikey konumda kullanılacak şekilde tasarla
   sayfanın arka planını nerede beyaza, yazıyı nerede siyaha çekmesi gerektiğini
   önerir, bu değerlerle gerçek bir "levels" (ton aralığı) düzeltmesi uygulanır —
   sabit kontrast filtrelerinden daha isabetli bir temiz tarama görünümü verir.
-  **Not:** Claude'un API'si görsel üretmiyor/yeniden çizmiyor; bu yüzden "yazıları
+  **Not:** Gemini görsel üretmiyor/yeniden çizmiyor; bu yüzden "yazıları
   ve şekilleri tamamen yeniden çizip temiz bir sayfa oluşturma" gibi bir işlem
   mümkün değil — burada yapılan, AI'nin önerdiği parametrelerle var olan fotoğrafı
   gerçek anlamda temizlemek/netleştirmek.
@@ -55,21 +55,23 @@ olursun. Bu da aynı ayarlardaki API anahtarını kullanır.
 
 ## Yapay zeka ile otomatik hizalama (API anahtarı)
 
-Kütüphanem'in sağ üstündeki dişli ikonundan **Ayarlar**'ı aç, kendi Anthropic API
-anahtarını yapıştır. Anahtarını almak için:
+Kütüphanem'in sağ üstündeki dişli ikonundan **Ayarlar**'ı aç, kendi Google Gemini
+API anahtarını yapıştır. Anahtarını almak için:
 
-1. [platform.claude.com](https://platform.claude.com) adresine git, hesap oluştur/giriş yap.
-2. **Settings → API keys → Create key**.
-3. `sk-ant-` ile başlayan anahtarı kopyalayıp Kütüphanem'in ayarlarına yapıştır.
+1. [aistudio.google.com/apikey](https://aistudio.google.com/apikey) adresine git, Google hesabınla giriş yap.
+2. **Create API key**'e bas.
+3. `AIza` ile başlayan anahtarı kopyalayıp Kütüphanem'in ayarlarına yapıştır. Ücretsiz
+   katman (Google AI Studio) kredi kartı gerektirmeden yeterli kotayı sağlıyor.
 
 **Önemli:** Bu anahtar yalnızca telefonunun tarayıcısında (localStorage) saklanır ve
-kırpma ekranındaki "AI ile hizala" butonuna bastığında doğrudan tarayıcından
-Anthropic'in API'sine gönderilir — aradan bir sunucu geçmez. Bu, anahtarın cihazının
+kırpma ekranındaki AI özelliklerine bastığında doğrudan tarayıcından Google'ın
+Gemini API'sine gönderilir — aradan bir sunucu geçmez. Bu, anahtarın cihazının
 dışına çıkmadığı anlamına gelir, ama aynı zamanda tarayıcı geliştirici araçlarını açan
 biri (örneğin ortak kullanılan bir cihazda) anahtarı görebilir demektir — kişisel,
 tek kullanıcılı bir uygulama için makul bir denge, ama başkalarıyla paylaşılan bir
-cihazda kullanmamaya dikkat et. Her istek Anthropic hesabından ücretlendirilir
-(küçük görseller ve kısa yanıtlar kullanıldığı için maliyeti düşüktür).
+cihazda kullanmamaya dikkat et. Her istek Google hesabından ücretlendirilir/kotadan
+düşer (küçük görseller ve kısa yanıtlar kullanıldığı için ücretsiz katman genelde
+yeterlidir).
 
 ## Sayfa yakınlaştırma ve işaretleme (Favoriler)
 
