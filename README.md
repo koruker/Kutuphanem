@@ -92,6 +92,25 @@ yeterlidir).
   görebilirsin — en son işaretlediğin en üstte. Listeden bir öğeye dokunmak
   ilgili kitabı açıp doğrudan o sayfaya götürür; çöp kutusu ikonuyla silebilirsin.
 
+## Okuma modu ve düzenleme modu
+
+Kitaplığında bir kitaba (kapağa) dokunmak seni her zaman **okuma moduna** açar:
+ekranda sadece sayfa ve alttaki "İşaretle" butonu var — başlık, sayfa sayısı,
+menü, "Sayfa ekle" gibi hiçbir şey görünmez, tamamen sade. Sol üstteki küçük ok
+kütüphaneye dönmek için hâlâ orada durur.
+
+Bir kitabı düzenlemek (sayfa eklemek/silmek/sıralamak, adını değiştirmek,
+silmek) için kitaplıktaki kartın sağ üst köşesindeki **kalem ikonuna** dokun —
+kitap bu sefer **düzenleme modunda** açılır: başlık, sayfa sayısı, "Sayfa ekle"
+ve ⋮ menüsü (Favoriler / Sayfaları Yönet / Kitabı sil) geri gelir. Yeni taradığın
+bir kitap da tarama bitince otomatik düzenleme modunda açılır, böylece hemen
+sayfa ekleyebilir/düzenleyebilirsin.
+
+Düzenleme modundayken üstteki **"Bitti"** butonuna basmak seni aynı kitabın
+okuma görünümüne geçirir (kütüphaneye çıkmadan). Kitaplığa her yeni girişte
+varsayılan yine okuma modudur — düzenleme modu her zaman bilinçli bir seçim
+(kalem ikonu veya "⋮" üzerinden) gerektirir.
+
 ## Sayfaları yönetme (silme / sıra değiştirme)
 
 Bir kitabı okurken ⋮ menüsünden **"📄 Sayfaları Yönet"**'e gir. Açılan listede

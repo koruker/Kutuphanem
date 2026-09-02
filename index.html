@@ -94,7 +94,7 @@
     grid-template-columns:repeat(auto-fill, minmax(112px,1fr));
     gap:22px 16px;
   }
-  .book-card{display:flex; flex-direction:column; gap:8px; text-align:left;}
+  .book-card{display:flex; flex-direction:column; gap:8px; text-align:left; cursor:pointer;}
   .spine{
     position:relative; aspect-ratio:3/4.2; border-radius:3px 7px 7px 3px;
     background:linear-gradient(135deg,#3a2f2a,#241c18);
@@ -105,6 +105,8 @@
   .spine img{width:100%; height:100%; object-fit:cover; display:block; opacity:0.96;}
   .spine .spine-edge{position:absolute; left:0; top:0; bottom:0; width:9px; background:linear-gradient(90deg, rgba(255,255,255,0.15), rgba(0,0,0,0.25));}
   .spine .no-cover{width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:rgba(243,234,216,0.35); font-family:var(--serif); font-size:34px;}
+  .edit-fab{position:absolute; top:6px; right:6px; z-index:2; width:27px; height:27px; border-radius:50%; background:rgba(15,18,22,0.62); backdrop-filter:blur(2px); display:flex; align-items:center; justify-content:center; color:var(--paper);}
+  .edit-fab svg{width:13px; height:13px;}
   .book-title{font-family:var(--serif); font-size:14.5px; line-height:1.25; color:var(--paper);}
   .book-meta{font-size:11px; color:rgba(243,234,216,0.45);}
 
@@ -126,6 +128,12 @@
     position:relative; z-index:5;
   }
   .icon-btn{width:38px; height:38px; display:flex; align-items:center; justify-content:center; border-radius:50%; color:var(--paper);}
+  .btn-done{height:38px; padding:0 14px; border-radius:999px; background:rgba(185,139,78,0.22); color:var(--brass-2); font-size:13px; font-weight:700; flex-shrink:0;}
+  /* Reading mode strips the UI down to just the back arrow + mark button.
+     Edit mode (entered via the library pencil icon or "⋮" from within) shows
+     everything: title, page count, Bitti, book menu, add-page. */
+  #view-reader.mode-read .edit-only{ display:none !important; }
+  #view-reader.mode-read #btnBackLib{ opacity:0.55; }
   .icon-btn svg{width:20px; height:20px;}
   .reader-title{flex:1; min-width:0;}
   .reader-title .t{font-family:var(--serif); font-size:15px; color:var(--paper); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
@@ -321,11 +329,12 @@
       <button class="icon-btn" id="btnBackLib" aria-label="Kütüphaneye dön">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
       </button>
-      <div class="reader-title">
+      <div class="reader-title edit-only">
         <div class="t" id="readerTitle">—</div>
         <div class="p" id="readerPage">—</div>
       </div>
-      <button class="icon-btn" id="btnBookMenu" aria-label="Kitap seçenekleri">
+      <button class="btn-done edit-only" id="btnReaderDone">Bitti</button>
+      <button class="icon-btn edit-only" id="btnBookMenu" aria-label="Kitap seçenekleri">
         <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
       </button>
     </div>
@@ -351,7 +360,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
         İşaretle
       </button>
-      <button class="add-page-btn" id="btnAddPage">
+      <button class="add-page-btn edit-only" id="btnAddPage">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
         Sayfa ekle
       </button>
@@ -707,27 +716,48 @@ function renderLibrary(){
   els.shelfCount.textContent = books.length + (books.length===1 ? " kitap" : " kitap");
   for(const b of books){
     const pages = pagesByBook[b.id] || [];
-    const card = document.createElement("button");
+    const card = document.createElement("div");
     card.className = "book-card";
+    card.setAttribute("role", "button");
+    card.tabIndex = 0;
     const coverUrl = pages[0] ? URL.createObjectURL(pages[0].blob) : null;
     if(coverUrl) libraryCoverUrls.push(coverUrl);
     card.innerHTML = `
       <div class="spine">
         <div class="spine-edge"></div>
         ${coverUrl ? `<img src="${coverUrl}" alt="">` : `<div class="no-cover">${(b.title||"?").charAt(0).toUpperCase()}</div>`}
+        <button class="edit-fab" aria-label="Kitabı düzenle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </button>
       </div>
       <div class="book-title">${escapeHtml(b.title || "Adsız kitap")}</div>
       <div class="book-meta">${pages.length} sayfa</div>`;
-    card.addEventListener("click", ()=>openBook(b.id));
+    card.addEventListener("click", ()=>openBook(b.id, "read"));
+    card.querySelector(".edit-fab").addEventListener("click", (e)=>{
+      e.stopPropagation();
+      openBook(b.id, "edit");
+    });
     els.grid.appendChild(card);
   }
 }
 function escapeHtml(s){ const d=document.createElement("div"); d.textContent=s; return d.innerHTML; }
 
 /* ============ READER ============ */
-async function openBook(bookId){
+let readerMode = "read"; // "read" (minimal, default) | "edit" (full controls)
+function applyReaderModeUi(){
+  els.viewReader.classList.toggle("mode-edit", readerMode === "edit");
+  els.viewReader.classList.toggle("mode-read", readerMode === "read");
+}
+$("#btnReaderDone").addEventListener("click", ()=>{
+  readerMode = "read";
+  applyReaderModeUi();
+});
+
+async function openBook(bookId, mode){
   currentBookId = bookId;
   currentIndex = 0;
+  readerMode = mode === "edit" ? "edit" : "read";
+  applyReaderModeUi();
   const book = books.find(b=>b.id===bookId);
   els.readerTitle.textContent = book ? book.title : "Kitap";
   showView("reader");
@@ -1360,11 +1390,11 @@ $("#btnScanClose").addEventListener("click", async ()=>{
   await loadLibrary();
 });
 $("#btnScanDone").addEventListener("click", async ()=>{
-  if(currentBookId === scanTargetBookId || els.viewReader.classList.contains("active")){
+  if(currentBookId === scanTargetBookId && els.viewReader.classList.contains("active")){
     showView("reader");
     renderPage();
   } else {
-    openBook(scanTargetBookId);
+    await openBook(scanTargetBookId, "edit");
   }
 });
 
