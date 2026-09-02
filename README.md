@@ -35,7 +35,23 @@ fotoğraf gitmez. iPhone'da, sadece dikey konumda kullanılacak şekilde tasarla
   analiz ettirip sayfayı otomatik düzeltir ve kırpma alanını önerir. Bu, ince açı
   düzeltme + otomatik kırpma yapar — tam "keystone" (dört köşeden perspektif)
   düzeltmesi değildir, elle çekilmiş hafif eğik fotoğraflar için düşünülmüştür.
-- Filtreler: Orijinal / Siyah-Beyaz Tarama / Netleştir.
+- **✨ AI Temiz Tarama** (filtre seçeneklerinin arasında): AI fotoğrafı analiz edip
+  sayfanın arka planını nerede beyaza, yazıyı nerede siyaha çekmesi gerektiğini
+  önerir, bu değerlerle gerçek bir "levels" (ton aralığı) düzeltmesi uygulanır —
+  sabit kontrast filtrelerinden daha isabetli bir temiz tarama görünümü verir.
+  **Not:** Claude'un API'si görsel üretmiyor/yeniden çizmiyor; bu yüzden "yazıları
+  ve şekilleri tamamen yeniden çizip temiz bir sayfa oluşturma" gibi bir işlem
+  mümkün değil — burada yapılan, AI'nin önerdiği parametrelerle var olan fotoğrafı
+  gerçek anlamda temizlemek/netleştirmek.
+- Filtreler: Orijinal / Siyah-Beyaz Tarama / Netleştir / AI Temiz Tarama.
+
+## Yazıyı okuma (OCR) — işaretlerken
+
+Bir bölgeyi işaretleyip not eklerken, not kutusunun yanındaki **✨ butonuna**
+basarsan, AI o bölgedeki yazıyı okuyup metne çevirir ve otomatik olarak not
+alanına yazar. Böylece önemli bulduğun bir pasajı hem görsel olarak işaretlemiş
+hem de metnini favoriler listesinde okunabilir/kopyalanabilir halde saklamış
+olursun. Bu da aynı ayarlardaki API anahtarını kullanır.
 
 ## Yapay zeka ile otomatik hizalama (API anahtarı)
 
