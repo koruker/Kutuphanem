@@ -83,9 +83,23 @@ yeterlidir).
   yakınlaştırıp geri çıkarır. Yakınlaştırılmışken kaydırma sayfa çevirmez, sadece
   görüntüyü kaydırır — sayfayı çevirmek için önce tekrar uzaklaştır.
 - Alt çubuktaki **"İşaretle"** butonuna basıp sayfada bir bölgeyi sürükleyerek
-  seç, istersen kısa bir not ekle, kaydet. Bu bölge o kitabın **Favoriler**
-  listesine (⋮ menüsünden erişilir) küçük bir önizlemeyle eklenir; listeden bir
-  öğeye dokunmak seni doğrudan o sayfaya götürür.
+  seç, istersen kısa bir not ekle (veya ✨ ile AI'ye o bölgedeki yazıyı okutup
+  otomatik not olarak ekletebilirsin), kaydet.
+- **Bir kitabın favorileri**: okurken ⋮ menüsünden "☆ Favoriler" ile o kitaba ait
+  tüm işaretleri görebilirsin.
+- **Tüm kitaplardaki favoriler**: anasayfanın sağ üstündeki ★ ikonuyla, hangi
+  kitaba ait olduklarını da göstererek, işaretlediğin her şeyi tek bir listede
+  görebilirsin — en son işaretlediğin en üstte. Listeden bir öğeye dokunmak
+  ilgili kitabı açıp doğrudan o sayfaya götürür; çöp kutusu ikonuyla silebilirsin.
+
+## Sayfaları yönetme (silme / sıra değiştirme)
+
+Bir kitabı okurken ⋮ menüsünden **"📄 Sayfaları Yönet"**'e gir. Açılan listede
+her sayfanın küçük bir önizlemesi, ▲/▼ butonlarıyla sırasını değiştirme ve çöp
+kutusu ikonuyla o sayfayı silme imkânı var. Bir sayfayı silersen, o sayfaya ait
+varsa işaretler/favoriler de birlikte silinir. Sıralama değişse bile favoriler
+her zaman doğru sayfayı işaret eder (favoriler sayfa numarasına değil, sayfanın
+kendisine bağlı tutulur).
 
 ## Dikey kilit
 
