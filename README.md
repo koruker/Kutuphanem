@@ -120,6 +120,28 @@ varsa işaretler/favoriler de birlikte silinir. Sıralama değişse bile favoril
 her zaman doğru sayfayı işaret eder (favoriler sayfa numarasına değil, sayfanın
 kendisine bağlı tutulur).
 
+## PDF ile yedekleme ve geri yükleme
+
+- **Kitabı PDF olarak indir**: bir kitabı düzenleme modunda açıp ⋮ menüsünden
+  **"⬇️ PDF olarak indir"**'e bas. Kitabın tüm sayfaları, hiçbir yeniden
+  sıkıştırma yapılmadan (orijinal JPEG'ler doğrudan gömülerek) tek bir PDF
+  dosyasına dönüştürülüp telefonuna iniyor. Bu PDF'i Dosyalar uygulamasında,
+  iCloud'da, e-postayla ya da başka bir yerde saklayarak yedekleyebilirsin —
+  bu adım tamamen tarayıcı içinde, harici bir kütüphane veya sunucu olmadan
+  yapılıyor.
+- **PDF'ten yeni kitap oluştur**: kütüphanede "+" ile yeni kitap adı girerken,
+  kamerayla taramak yerine **"📄 PDF'ten içe aktar"**'a basıp bir PDF dosyası
+  seçebilirsin — PDF'in her sayfası otomatik olarak kitabın sayfaları haline
+  gelir.
+- **Mevcut bir kitaba PDF'ten sayfa ekle**: düzenleme modunda ⋮ menüsünden
+  **"📄 PDF'ten sayfa ekle"** ile bir PDF'in sayfalarını, o kitabın sonuna
+  ekleyebilirsin (örneğin önceden aldığın bir yedeği geri yüklemek için).
+- PDF *okuma* (içe aktarma) özelliği, PDF sayfalarını görsele çevirmek için
+  ilk kullanıldığında internetten (jsDelivr CDN üzerinden)
+  [pdf.js](https://mozilla.github.io/pdf.js/) kütüphanesini indirir — bu
+  yüzden internet bağlantısı gerektirir. PDF *oluşturma* (dışa aktarma/yedekleme)
+  hiçbir dış bağımlılık kullanmaz, tamamen çevrimdışı çalışır.
+
 ## Dikey kilit
 
 iOS Safari'de bir web sayfası ekran yönünü zorla kilitleyemiyor (bu Apple'ın kısıtlaması,
