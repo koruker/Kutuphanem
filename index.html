@@ -129,11 +129,27 @@
   }
   .icon-btn{width:38px; height:38px; display:flex; align-items:center; justify-content:center; border-radius:50%; color:var(--paper);}
   .btn-done{height:38px; padding:0 14px; border-radius:999px; background:rgba(185,139,78,0.22); color:var(--brass-2); font-size:13px; font-weight:700; flex-shrink:0;}
-  /* Reading mode strips the UI down to just the back arrow + mark button.
-     Edit mode (entered via the library pencil icon or "⋮" from within) shows
-     everything: title, page count, Bitti, book menu, add-page. */
+  /* Reading mode strips the UI down to just two floating buttons over a
+     full-bleed page: no top/bottom bars at all. Edit mode (entered via the
+     library pencil icon, or "Sayfaları Yönet" while reading) shows the full
+     bars (title, page count, Bitti, book menu, add-page) and hides the
+     floating buttons instead. */
   #view-reader.mode-read .edit-only{ display:none !important; }
-  #view-reader.mode-read #btnBackLib{ opacity:0.55; }
+  #view-reader.mode-edit .read-only{ display:none !important; }
+  .float-btn{
+    position:absolute; z-index:9;
+    background:rgba(15,18,22,0.55); backdrop-filter:blur(3px);
+    color:var(--paper); display:flex; align-items:center; justify-content:center;
+    border-radius:999px; border:1px solid rgba(255,255,255,0.08);
+  }
+  .float-back{ top:calc(10px + var(--safe-top)); left:12px; width:38px; height:38px; }
+  .float-back svg{width:19px; height:19px;}
+  .float-mark{
+    bottom:calc(14px + var(--safe-bottom)); left:50%; transform:translateX(-50%);
+    padding:10px 18px; gap:7px; font-size:13px; font-weight:600;
+  }
+  .float-mark svg{width:15px; height:15px;}
+  .float-mark.on{ background:rgba(185,139,78,0.55); color:var(--ink); }
   .icon-btn svg{width:20px; height:20px;}
   .reader-title{flex:1; min-width:0;}
   .reader-title .t{font-family:var(--serif); font-size:15px; color:var(--paper); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
@@ -199,7 +215,16 @@
   .camera-wrap{flex:1; position:relative; background:#111; overflow:hidden;}
   #camVideo{width:100%; height:100%; object-fit:cover; display:block;}
   .cam-fallback{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:14px; padding:30px; text-align:center; color:rgba(243,234,216,0.7);}
-  .guide-frame{position:absolute; inset:6% 5%; border:1.5px dashed rgba(243,234,216,0.55); border-radius:8px; pointer-events:none;}
+  .guide-frame{position:absolute; inset:6% 5%; border:1.5px dashed rgba(243,234,216,0.55); border-radius:8px; pointer-events:none; transition:border-color 200ms, border-style 200ms;}
+  .guide-frame.state-detecting{border-style:solid; border-color:rgba(217,174,115,0.9);}
+  .guide-frame.state-stable{border-style:solid; border-color:#7CC28A;}
+  .auto-pill{padding:7px 12px; border-radius:999px; background:rgba(255,255,255,0.1); color:rgba(243,234,216,0.75); font-size:11.5px; font-weight:600; white-space:nowrap; flex-shrink:0;}
+  .auto-pill.on{background:rgba(185,139,78,0.3); color:var(--brass-2);}
+  .auto-quad-svg{position:absolute; inset:0; width:100%; height:100%; pointer-events:none; display:none; z-index:2;}
+  #view-scan.auto-on .auto-quad-svg{display:block;}
+  #autoQuadPoly{fill:rgba(217,174,115,0.16); stroke:#D9AE73; stroke-width:0.6; transition:opacity 150ms;}
+  .auto-hint{position:absolute; left:12px; right:12px; bottom:10px; text-align:center; font-size:11.5px; color:rgba(243,234,216,0.7); background:rgba(0,0,0,0.35); padding:6px 10px; border-radius:8px; pointer-events:none; display:none;}
+  #view-scan.auto-on .auto-hint{display:block;}
   .scan-bottom{padding:22px 20px calc(26px + var(--safe-bottom)); display:flex; align-items:center; justify-content:center; gap:36px;}
   .shutter{
     width:70px; height:70px; border-radius:50%; background:var(--paper); border:4px solid rgba(243,234,216,0.35);
@@ -325,16 +350,16 @@
 
   <!-- READER -->
   <div id="view-reader">
-    <div class="reader-top">
+    <div class="reader-top edit-only">
       <button class="icon-btn" id="btnBackLib" aria-label="Kütüphaneye dön">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
       </button>
-      <div class="reader-title edit-only">
+      <div class="reader-title">
         <div class="t" id="readerTitle">—</div>
         <div class="p" id="readerPage">—</div>
       </div>
-      <button class="btn-done edit-only" id="btnReaderDone">Bitti</button>
-      <button class="icon-btn edit-only" id="btnBookMenu" aria-label="Kitap seçenekleri">
+      <button class="btn-done" id="btnReaderDone">Bitti</button>
+      <button class="icon-btn" id="btnBookMenu" aria-label="Kitap seçenekleri">
         <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
       </button>
     </div>
@@ -355,16 +380,25 @@
         </div>
       </div>
     </div>
-    <div class="reader-bottom">
-      <button class="mark-btn" id="btnMarkToggle">
+    <div class="reader-bottom edit-only">
+      <button class="mark-btn mark-toggle-btn" id="btnMarkToggle">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
         İşaretle
       </button>
-      <button class="add-page-btn edit-only" id="btnAddPage">
+      <button class="add-page-btn" id="btnAddPage">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
         Sayfa ekle
       </button>
     </div>
+    <!-- Reading mode: everything above is hidden; only these two floating,
+         translucent buttons remain over the full-bleed page. -->
+    <button class="float-btn float-back read-only" id="floatBackLib" aria-label="Kütüphaneye dön">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <button class="float-btn float-mark read-only mark-toggle-btn" id="floatMarkToggle" aria-label="İşaretle">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+      İşaretle
+    </button>
   </div>
 
   <!-- SCAN (camera) -->
@@ -374,11 +408,15 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
       </button>
       <div class="count" id="scanCount">0 sayfa tarandı</div>
-      <div style="width:38px;"></div>
+      <button class="auto-pill" id="btnAutoScanToggle" aria-pressed="false">Otomatik: Kapalı</button>
     </div>
     <div class="camera-wrap">
       <video id="camVideo" autoplay playsinline muted></video>
+      <svg id="autoQuadSvg" viewBox="0 0 100 100" preserveAspectRatio="none" class="auto-quad-svg">
+        <polygon id="autoQuadPoly" points=""></polygon>
+      </svg>
       <div class="guide-frame" id="guideFrame"></div>
+      <div class="auto-hint" id="autoHint">Sayfayı çerçeveye getir — hizalanınca otomatik çekilecek</div>
       <div class="cam-fallback" id="camFallback" style="display:none;">
         <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7l1.5-3h5L16 7"/><circle cx="12" cy="13.5" r="3.4"/></svg>
         <div>Kamera açılamadı. Galeriden seçebilirsin.</div>
@@ -614,6 +652,7 @@ const els = {
   markOverlay: $("#markOverlay"), btnMarkToggle: $("#btnMarkToggle"),
   camVideo: $("#camVideo"), camFallback: $("#camFallback"), guideFrame: $("#guideFrame"),
   scanCount: $("#scanCount"), galleryInput: $("#galleryInput"),
+  btnAutoScanToggle: $("#btnAutoScanToggle"), autoQuadPoly: $("#autoQuadPoly"),
   cropImg: $("#cropImg"), cropViewport: $("#cropViewport"), cropRect: $("#cropRect"),
   sheetMask: $("#sheetMask"), sheetTitle: $("#sheetTitle"), bookNameInput: $("#bookNameInput"),
   deleteRow: $("#deleteRow"), favRow: $("#favRow"), pagesRow: $("#pagesRow"), toast: $("#toast"),
@@ -765,9 +804,8 @@ $("#btnReaderDone").addEventListener("click", ()=>{
   applyReaderModeUi();
 });
 
-async function openBook(bookId, mode){
+async function openBook(bookId, mode, targetPageId){
   currentBookId = bookId;
-  currentIndex = 0;
   readerMode = mode === "edit" ? "edit" : "read";
   applyReaderModeUi();
   const book = books.find(b=>b.id===bookId);
@@ -776,6 +814,13 @@ async function openBook(bookId, mode){
   if(!highlightsByBook[bookId]){
     try{ highlightsByBook[bookId] = await idbGetAllByIndex("highlights","bookId",bookId); }
     catch(e){ highlightsByBook[bookId] = []; }
+  }
+  const pages = pagesByBook[bookId] || [];
+  if(targetPageId){
+    const idx = pages.findIndex(p=>p.id===targetPageId);
+    currentIndex = idx >= 0 ? idx : 0;
+  } else {
+    currentIndex = 0;
   }
   renderPage();
 }
@@ -926,6 +971,7 @@ function flipTo(direction){
 }
 
 $("#btnBackLib").addEventListener("click", ()=>{ showView("library"); loadLibrary(); });
+$("#floatBackLib").addEventListener("click", ()=>{ showView("library"); loadLibrary(); });
 
 /* ---- unified pointer gestures: pinch-zoom, pan, swipe-to-flip, double-tap-zoom ---- */
 const readerPointers = new Map();
@@ -1030,16 +1076,18 @@ els.bookStage.addEventListener("pointercancel", endReaderPointer);
 /* ============ HIGHLIGHTS / FAVORITES ============ */
 let markMode = false, markDragStart = null, markRectEl = null, pendingMarkRect = null;
 
-$("#btnMarkToggle").addEventListener("click", ()=>{
+function enterMarkMode(){
   if(currentPages().length === 0){ toast("Önce bir sayfa ekle"); return; }
   if(readerScale > 1.02) resetReaderView();
   markMode = true;
-  els.btnMarkToggle.classList.add("on");
+  document.querySelectorAll(".mark-toggle-btn").forEach(b=>b.classList.add("on"));
   els.markOverlay.classList.add("active");
-});
+}
+$("#btnMarkToggle").addEventListener("click", enterMarkMode);
+$("#floatMarkToggle").addEventListener("click", enterMarkMode);
 function exitMarkMode(){
   markMode = false;
-  els.btnMarkToggle.classList.remove("on");
+  document.querySelectorAll(".mark-toggle-btn").forEach(b=>b.classList.remove("on"));
   els.markOverlay.classList.remove("active");
   if(markRectEl){ markRectEl.remove(); markRectEl = null; }
   markDragStart = null;
@@ -1224,13 +1272,17 @@ function openFavorites(scopeBookId){
 }
 async function jumpToFavorite(h){
   els.favoritesMask.classList.remove("active");
-  if(currentBookId !== h.bookId){
-    await openBook(h.bookId);
+  if(currentBookId === h.bookId){
+    const pages = currentPages();
+    const idx = pages.findIndex(p=>p.id===h.pageId);
+    if(idx < 0){ toast("Bu sayfa artık mevcut değil"); return; }
+    currentIndex = idx;
+    renderPage();
+  } else {
+    const pages = pagesByBook[h.bookId] || [];
+    if(!pages.some(p=>p.id===h.pageId)){ toast("Bu sayfa artık mevcut değil"); return; }
+    await openBook(h.bookId, "read", h.pageId);
   }
-  const pages = currentPages();
-  const idx = pages.findIndex(p=>p.id===h.pageId);
-  currentIndex = idx >= 0 ? idx : 0;
-  renderPage();
 }
 async function deleteHighlight(h){
   await idbDelete("highlights", h.id);
@@ -1589,6 +1641,7 @@ async function openScanner(bookId){
   scanTargetBookId = bookId;
   showView("scan");
   updateScanCount();
+  setAutoScanMode(false); // manual system is always the default on entry
   await startCamera();
 }
 function updateScanCount(){
@@ -1619,6 +1672,7 @@ async function startCamera(){
       audio:false
     });
     els.camVideo.srcObject = stream;
+    if(autoScanMode) startAutoLoop();
   }catch(err){
     els.camVideo.style.display = "none";
     els.camFallback.style.display = "flex";
@@ -1626,6 +1680,7 @@ async function startCamera(){
 }
 function stopCamera(){
   if(stream){ stream.getTracks().forEach(t=>t.stop()); stream = null; }
+  stopAutoLoop();
 }
 
 $("#btnShutter").addEventListener("click", ()=>{
@@ -1643,6 +1698,192 @@ els.galleryInput.addEventListener("change", (e)=>{
   if(files.length) openCrop(files[0]);
   els.galleryInput.value = "";
 });
+
+/* ============ AUTO-SCAN (optional live edge detection + auto-capture) ============
+   Off by default — the manual shutter/gallery flow above is unchanged and is
+   always what a fresh scan session starts with. This is a lightweight,
+   from-scratch heuristic (no OpenCV/ML): it looks for a bright, roughly
+   quadrilateral region (the page) against a darker background, tracks it
+   across a few frames for stability, and captures + perspective-warps
+   automatically once it holds steady. Works best with reasonable lighting
+   contrast between page and background — not as robust as a full CV
+   pipeline, but genuinely functional for typical desk/notebook photos. */
+let autoScanMode = false;
+let autoLoopHandle = null;
+let autoHistory = [];
+let autoCooldownUntil = 0;
+let autoBusy = false;
+const autoDetectCanvas = document.createElement("canvas");
+
+function setAutoScanMode(on){
+  autoScanMode = on;
+  els.btnAutoScanToggle.classList.toggle("on", on);
+  els.btnAutoScanToggle.setAttribute("aria-pressed", on ? "true" : "false");
+  els.btnAutoScanToggle.textContent = on ? "Otomatik: Açık" : "Otomatik: Kapalı";
+  els.viewScan.classList.toggle("auto-on", on);
+  autoHistory = [];
+  autoCooldownUntil = 0;
+  setGuideState("idle");
+  if(on) startAutoLoop(); else stopAutoLoop();
+}
+$("#btnAutoScanToggle").addEventListener("click", ()=> setAutoScanMode(!autoScanMode));
+
+function startAutoLoop(){
+  stopAutoLoopTimer();
+  autoLoopHandle = setInterval(autoTick, 260);
+}
+function stopAutoLoopTimer(){
+  if(autoLoopHandle){ clearInterval(autoLoopHandle); autoLoopHandle = null; }
+}
+function stopAutoLoop(){
+  stopAutoLoopTimer();
+  setGuideState("idle");
+  els.autoQuadPoly.setAttribute("points", "");
+}
+function setGuideState(state){
+  els.guideFrame.classList.remove("state-detecting", "state-stable");
+  if(state === "detecting") els.guideFrame.classList.add("state-detecting");
+  if(state === "stable") els.guideFrame.classList.add("state-stable");
+}
+
+// Approximates the page quad from a downscaled frame: finds pixels brighter
+// than the frame's mean (paper vs. background) and takes the four extreme
+// corner points of that bright region via the classic x+y / x-y trick.
+function detectPageQuad(videoEl){
+  if(!videoEl.videoWidth || !videoEl.videoHeight) return null;
+  const w = 220, h = Math.round(220 * videoEl.videoHeight / videoEl.videoWidth);
+  if(!h) return null;
+  autoDetectCanvas.width = w; autoDetectCanvas.height = h;
+  const ctx = autoDetectCanvas.getContext("2d", { willReadFrequently: true });
+  ctx.drawImage(videoEl, 0, 0, w, h);
+  let data;
+  try{ data = ctx.getImageData(0, 0, w, h).data; }catch(e){ return null; }
+
+  let sum = 0;
+  const lum = new Float32Array(w*h);
+  for(let i=0, p=0; i<w*h; i++, p+=4){
+    const l = 0.299*data[p] + 0.587*data[p+1] + 0.114*data[p+2];
+    lum[i] = l; sum += l;
+  }
+  const mean = sum/(w*h);
+  const threshold = mean + 14;
+
+  let minSum=Infinity, maxSum=-Infinity, minDiff=Infinity, maxDiff=-Infinity;
+  let pMinSum=null, pMaxSum=null, pMinDiff=null, pMaxDiff=null;
+  let bright = 0;
+  for(let y=0;y<h;y++){
+    for(let x=0;x<w;x++){
+      if(lum[y*w+x] > threshold){
+        bright++;
+        const s=x+y, d=x-y;
+        if(s<minSum){minSum=s; pMinSum={x,y};}
+        if(s>maxSum){maxSum=s; pMaxSum={x,y};}
+        if(d<minDiff){minDiff=d; pMinDiff={x,y};}
+        if(d>maxDiff){maxDiff=d; pMaxDiff={x,y};}
+      }
+    }
+  }
+  const area = bright/(w*h);
+  if(area < 0.15 || area > 0.97 || !pMinSum || !pMaxSum || !pMinDiff || !pMaxDiff) return null;
+
+  const quad = {
+    tl: {x: pMinSum.x/w, y: pMinSum.y/h},
+    br: {x: pMaxSum.x/w, y: pMaxSum.y/h},
+    tr: {x: pMaxDiff.x/w, y: pMaxDiff.y/h},
+    bl: {x: pMinDiff.x/w, y: pMinDiff.y/h}
+  };
+  return quadLooksValid(quad) ? quad : null;
+}
+
+// Maps a raw-video-frame fraction to the on-screen fraction, accounting for
+// the object-fit:cover crop between the video's native aspect and its box.
+function videoDisplayCrop(){
+  const vw = els.camVideo.videoWidth, vh = els.camVideo.videoHeight;
+  const wrap = els.camVideo.parentElement;
+  const cw = wrap.clientWidth, ch = wrap.clientHeight;
+  if(!vw || !vh || !cw || !ch) return {cropFracX:0, cropFracY:0};
+  const videoAR = vw/vh, containerAR = cw/ch;
+  let cropFracX = 0, cropFracY = 0;
+  if(videoAR > containerAR) cropFracX = (1 - containerAR/videoAR)/2;
+  else if(videoAR < containerAR) cropFracY = (1 - videoAR/containerAR)/2;
+  return {cropFracX, cropFracY};
+}
+function mapQuadToDisplay(quad){
+  const {cropFracX, cropFracY} = videoDisplayCrop();
+  const dx = 1 - 2*cropFracX, dy = 1 - 2*cropFracY;
+  const m = (p)=>({ x:(p.x-cropFracX)/dx, y:(p.y-cropFracY)/dy });
+  return { tl:m(quad.tl), tr:m(quad.tr), br:m(quad.br), bl:m(quad.bl) };
+}
+
+function quadsAreStable(hist){
+  const last = hist[hist.length-1];
+  for(let i=hist.length-2;i>=0;i--){
+    const q = hist[i];
+    const d = (dist(last.tl,q.tl)+dist(last.tr,q.tr)+dist(last.br,q.br)+dist(last.bl,q.bl))/4;
+    if(d > 0.025) return false;
+  }
+  return true;
+}
+
+function autoTick(){
+  if(!autoScanMode || autoBusy || !stream) return;
+  if(Date.now() < autoCooldownUntil) return;
+  const quad = detectPageQuad(els.camVideo);
+  if(!quad){
+    autoHistory = [];
+    setGuideState("idle");
+    els.autoQuadPoly.setAttribute("points", "");
+    return;
+  }
+  setGuideState("detecting");
+  const disp = mapQuadToDisplay(quad);
+  const pts = [disp.tl, disp.tr, disp.br, disp.bl].map(p=>`${(p.x*100).toFixed(1)},${(p.y*100).toFixed(1)}`).join(" ");
+  els.autoQuadPoly.setAttribute("points", pts);
+
+  autoHistory.push(quad);
+  if(autoHistory.length > 3) autoHistory.shift();
+  if(autoHistory.length >= 3 && quadsAreStable(autoHistory)){
+    setGuideState("stable");
+    autoCapture(quad);
+  }
+}
+
+function flashCapture(){
+  const wrap = document.querySelector(".camera-wrap");
+  if(!wrap) return;
+  const flash = document.createElement("div");
+  flash.style.cssText = "position:absolute;inset:0;background:#fff;opacity:0.85;pointer-events:none;transition:opacity 380ms;z-index:6;";
+  wrap.appendChild(flash);
+  requestAnimationFrame(()=>{ flash.style.opacity = "0"; });
+  setTimeout(()=> flash.remove(), 420);
+}
+
+async function autoCapture(quad){
+  autoBusy = true;
+  try{
+    const video = els.camVideo;
+    const full = document.createElement("canvas");
+    full.width = video.videoWidth; full.height = video.videoHeight;
+    full.getContext("2d").drawImage(video, 0, 0);
+    const warped = warpQuadFromSource(full, full.width, full.height, quad);
+    const blob = await new Promise((res)=> warped.toBlob(res, "image/jpeg", 0.9));
+    if(!blob) throw new Error("blob boş");
+    const pages = pagesByBook[scanTargetBookId] || (pagesByBook[scanTargetBookId] = []);
+    const page = { id: uid(), bookId: scanTargetBookId, order: pages.length, blob };
+    await idbPut("pages", page);
+    pages.push(page);
+    updateScanCount();
+    flashCapture();
+    toast("Sayfa yakalandı — sıradaki sayfaya geç");
+  }catch(err){
+    toast("Otomatik çekim başarısız oldu");
+  }finally{
+    autoCooldownUntil = Date.now() + 1800;
+    autoHistory = [];
+    els.autoQuadPoly.setAttribute("points", "");
+    autoBusy = false;
+  }
+}
 
 /* ============ CROP ============
    #cropImg is a <canvas> holding the "baked" working image (rotation and
@@ -2015,8 +2256,11 @@ function drawWarpTriangle(ctx, img, s, d){
 }
 // Warps the quadrilateral defined by 4 corners (fractions 0-1 of naturalW/H) so
 // it fills a straight rectangle, as if the page had been photographed head-on.
-function warpQuadToRect(corners){
-  const srcQuad = ["tl","tr","br","bl"].map(k=>({x: corners[k].x*naturalW, y: corners[k].y*naturalH}));
+// Generic: warps an arbitrary quad (fractions 0-1, keys tl/tr/br/bl) region of
+// any drawImage-able source (canvas/video/img) into a flat rectangle. Shared
+// by the crop screen's AI-align feature and the live auto-scan capture.
+function warpQuadFromSource(sourceEl, srcW, srcH, corners){
+  const srcQuad = ["tl","tr","br","bl"].map(k=>({x: corners[k].x*srcW, y: corners[k].y*srcH}));
   const topW = dist(srcQuad[0], srcQuad[1]), botW = dist(srcQuad[3], srcQuad[2]);
   const leftH = dist(srcQuad[0], srcQuad[3]), rightH = dist(srcQuad[1], srcQuad[2]);
   const outW = Math.max(40, Math.round(Math.max(topW, botW)));
@@ -2035,11 +2279,14 @@ function warpQuadToRect(corners){
       const dy0 = outH*j/GRID, dy1 = outH*(j+1)/GRID;
       const d00={x:dx0,y:dy0}, d10={x:dx1,y:dy0}, d11={x:dx1,y:dy1}, d01={x:dx0,y:dy1};
       const s00=mapH(H,d00), s10=mapH(H,d10), s11=mapH(H,d11), s01=mapH(H,d01);
-      drawWarpTriangle(octx, els.cropImg, [s00,s10,s11], [d00,d10,d11]);
-      drawWarpTriangle(octx, els.cropImg, [s00,s11,s01], [d00,d11,d01]);
+      drawWarpTriangle(octx, sourceEl, [s00,s10,s11], [d00,d10,d11]);
+      drawWarpTriangle(octx, sourceEl, [s00,s11,s01], [d00,d11,d01]);
     }
   }
   return out;
+}
+function warpQuadToRect(corners){
+  return warpQuadFromSource(els.cropImg, naturalW, naturalH, corners);
 }
 function quadLooksValid(c){
   // basic sanity: all points in range and roughly in tl/tr/br/bl order (convex-ish)

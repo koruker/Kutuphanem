@@ -94,22 +94,50 @@ yeterlidir).
 
 ## Okuma modu ve düzenleme modu
 
-Kitaplığında bir kitaba (kapağa) dokunmak seni her zaman **okuma moduna** açar:
-ekranda sadece sayfa ve alttaki "İşaretle" butonu var — başlık, sayfa sayısı,
-menü, "Sayfa ekle" gibi hiçbir şey görünmez, tamamen sade. Sol üstteki küçük ok
-kütüphaneye dönmek için hâlâ orada durur.
+Kitaplığında bir kitaba (kapağa) dokunmak seni her zaman **okuma moduna** açar —
+artık gerçekten tam ekran: üstte/altta hiçbir çubuk/başlık alanı kalmıyor,
+sadece sayfa ve onun üzerinde yarı saydam iki küçük buton yüzüyor (sol üstte
+geri oku, altta "İşaretle"). Başlık, sayfa sayısı, menü, "Sayfa ekle" gibi
+hiçbir şey görünmez.
 
 Bir kitabı düzenlemek (sayfa eklemek/silmek/sıralamak, adını değiştirmek,
 silmek) için kitaplıktaki kartın sağ üst köşesindeki **kalem ikonuna** dokun —
 kitap bu sefer **düzenleme modunda** açılır: başlık, sayfa sayısı, "Sayfa ekle"
-ve ⋮ menüsü (Favoriler / Sayfaları Yönet / Kitabı sil) geri gelir. Yeni taradığın
-bir kitap da tarama bitince otomatik düzenleme modunda açılır, böylece hemen
-sayfa ekleyebilir/düzenleyebilirsin.
+ve ⋮ menüsü (Favoriler / Sayfaları Yönet / Kitabı sil / PDF) geri gelir. Yeni
+taradığın bir kitap da tarama bitince otomatik düzenleme modunda açılır.
 
 Düzenleme modundayken üstteki **"Bitti"** butonuna basmak seni aynı kitabın
 okuma görünümüne geçirir (kütüphaneye çıkmadan). Kitaplığa her yeni girişte
 varsayılan yine okuma modudur — düzenleme modu her zaman bilinçli bir seçim
 (kalem ikonu veya "⋮" üzerinden) gerektirir.
+
+**Favoriler artık düzgün açılıyor**: bir favoriye dokunmak, hangi kitapta
+olursa olsun, doğrudan o kitabı o sayfada okuma modunda açar (önceki sürümde
+favoriye tıklayınca bazen hiçbir şey olmadan kaldığı bir hata vardı — düzeltildi).
+
+## Otomatik tarama (deneysel, opsiyonel)
+
+Tarama ekranının sağ üstünde **"Otomatik: Kapalı"** yazan bir düğme var.
+Varsayılan olarak kapalı — yani hiçbir şey değişmedi, mevcut manuel çekim
+sistemi (deklanşöre basıp elle kırpma) her zamanki gibi çalışmaya devam ediyor.
+
+Açtığında uygulama kamera görüntüsünü saniyede birkaç kez analiz eder: koyu bir
+arka plan üzerindeki açık renkli sayfayı arar, dört köşesini tahmin eder ve
+ekranda o dörtgeni canlı olarak çizer. Sayfa birkaç kare boyunca kararlı/sabit
+durursa (yani elini durdurup düzgün kadrajladıysan), rehber çerçeve yeşile
+döner ve **otomatik olarak fotoğrafı çeker, perspektifi düzeltir, sayfa olarak
+kaydeder** — sonra tekrar bir sonraki sayfayı beklemeye döner. Kırpma ekranına
+hiç girmeden, art arda sayfa çevirip art arda taramanı sağlar.
+
+Bunun sınırları var: Google Drive/iPhone Notes'un kullandığı gelişmiş bilgisayarlı
+görü modelleri yerine, sıfırdan yazılmış hafif bir "parlaklık farkı" sezgiseli
+kullanıyor (sayfa arka plandan belirgin şekilde daha açık renkliyse en iyi
+çalışır — senin örnek fotoğrafındaki gibi karanlık bir tezgah üzerindeki beyaz
+defter sayfası tam bu senaryo). Zayıf ışıkta, sayfa ile arka plan rengi
+birbirine çok yakınsa, ya da sayfa ekranın çoğunu/çok azını kaplıyorsa
+güvenilirliği düşer — bu durumda otomatik modu kapatıp manuel çekim + kırpma
+ekranındaki "✨ AI ile hizala" özelliğini kullanmak daha sağlam sonuç verir.
+Manuel deklanşör düğmesi otomatik mod açıkken de her zaman çalışır durumda kalır.
 
 ## Sayfaları yönetme (silme / sıra değiştirme)
 
