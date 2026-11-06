@@ -1,2428 +1,968 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#1B2430">
-<meta name="screen-orientation" content="portrait">
-<title>Kütüphanem</title>
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<link rel="icon" type="image/svg+xml" href="icon.svg">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Kütüphanem">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ürün Takip</title>
 <style>
-  :root{
-    --ink:#1B2430;
-    --ink-2:#232D3B;
-    --paper:#F3EAD8;
-    --paper-2:#EAE0CB;
-    --brass:#B98B4E;
-    --brass-2:#D9AE73;
-    --maroon:#6E2A38;
-    --charcoal:#2A2420;
-    --line:rgba(42,36,32,0.14);
-    --serif: "Iowan Old Style","Palatino Linotype","URW Palladio L",Palatino,Georgia,serif;
-    --sans: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
-    --safe-top: env(safe-area-inset-top, 0px);
-    --safe-bottom: env(safe-area-inset-bottom, 0px);
-  }
-  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
-  html,body{height:100%; height:100dvh; width:100%; overscroll-behavior:none;}
-  body{
-    margin:0;
-    background:var(--ink);
-    color:var(--paper);
-    font-family:var(--sans);
-    overflow:hidden;
-    position:fixed;
-    inset:0;
-    touch-action:manipulation;
-  }
-  #app{position:absolute; inset:0; display:flex; flex-direction:column;}
+:root{--bg:#f3f5f8;--card:#fff;--tx:#1b2430;--mut:#6b7788;--line:#dde3ec;--pri:#1f6feb;--red:#d92d20;--redbg:#fee4e2;--ok:#12805c;--okbg:#d9f5e7;--amb:#b54708;--ambbg:#fef0c7}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--tx);font-size:15px}
+#top{position:sticky;top:0;z-index:20;background:#101826;color:#fff;display:flex;align-items:stretch;gap:8px;padding:8px 10px;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+#top .lbl{font-size:11px;letter-spacing:.06em;color:#9fb0c8;align-self:center;white-space:nowrap}
+#chips{display:flex;gap:8px;overflow-x:auto;flex:1;padding-bottom:2px}
+.chip{flex:0 0 auto;background:#1b2740;border:1px solid #2b3a58;border-radius:8px;padding:5px 10px;font-size:13px;line-height:1.25;white-space:nowrap}
+.chip b{font-size:16px}
+.chip small{display:block;color:#9fb0c8;font-size:11px}
+.chip.low{background:var(--red);border-color:#ff8a80;animation:pulse 1.6s infinite}
+.chip.low small{color:#ffe0dc}
+@keyframes pulse{50%{opacity:.8}}
+.tabs{display:flex;gap:6px;padding:10px 10px 0;overflow-x:auto}
+.tab{border:0;background:#e3e8f0;padding:9px 16px;border-radius:8px 8px 0 0;font-weight:600;color:var(--mut);cursor:pointer;white-space:nowrap}
+.tab.on{background:var(--card);color:var(--pri)}
+main{padding:0 10px 40px}
+.card{background:var(--card);border-radius:0 10px 10px 10px;padding:14px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+h2{margin:0 0 10px;font-size:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;align-items:end}
+label{display:block;font-size:12px;color:var(--mut);margin-bottom:3px}
+input,select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font-size:15px;background:#fff;color:var(--tx)}
+input:focus,select:focus{outline:2px solid #a8c7fa;border-color:var(--pri)}
+button{font:inherit;cursor:pointer}
+.btn{background:var(--pri);color:#fff;border:0;border-radius:7px;padding:10px 14px;font-weight:600}
+.btn.sec{background:#e3e8f0;color:var(--tx)}
+.btn.sm{padding:5px 9px;font-size:13px}
+.btn.del{background:var(--redbg);color:var(--red)}
+.hint{font-size:12px;color:var(--mut);margin-top:8px;line-height:1.5}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:720px}
+th,td{padding:8px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap;font-size:14px}
+th{font-size:12px;color:var(--mut);font-weight:600;background:#f8fafc}
+td input,td select{padding:6px 7px;font-size:14px}
+tr.low td{background:var(--redbg)}
+tr.low .remc{color:var(--red);font-weight:700}
+.remc{font-weight:700}
+.num{text-align:right}
+.badge{display:inline-block;background:var(--red);color:#fff;font-size:11px;border-radius:5px;padding:1px 6px;margin-left:4px}
+.warnTxt{color:var(--red);font-weight:600}
+.empty{padding:18px;text-align:center;color:var(--mut)}
+details summary{cursor:pointer;font-weight:600;color:var(--mut)}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:end}
+.hide{display:none}
+.sum{margin-bottom:10px;font-size:13px;color:var(--mut)}
+.sum b{color:var(--tx)}
 
-  /* Portrait-only: iOS/Safari can't be force-locked from a web page, so we
-     block interaction with a full-screen notice whenever the device is
-     rotated to landscape instead. */
-  #rotateGate{
-    display:none; position:fixed; inset:0; z-index:999; background:var(--ink);
-    color:var(--paper); align-items:center; justify-content:center; flex-direction:column;
-    gap:14px; text-align:center; padding:30px;
-  }
-  @media (orientation:landscape) and (max-height:600px){
-    #rotateGate{display:flex;}
-  }
-  #rotateGate svg{width:56px; height:56px; opacity:0.7;}
-  #rotateGate p{font-family:var(--serif); font-size:16px; max-width:260px; line-height:1.5; margin:0;}
-  button{font-family:inherit; border:none; background:none; color:inherit; cursor:pointer;}
-  button:active{opacity:0.7;}
-  ::selection{background:var(--brass); color:var(--ink);}
+/* Excel tarzı ızgara */
+table.xl{border-collapse:collapse;table-layout:fixed;min-width:1300px;width:100%}
+table.xl th,table.xl td{border:1px solid #c5cdd9;padding:0;white-space:nowrap;background:#fff}
+table.xl th{background:#e9edf3;padding:6px 8px;font-size:12px;color:#3b4656;text-align:left}
+table.xl td.rn{background:#e9edf3;color:#7a8696;text-align:center;font-size:12px}
+table.xl td.dn{text-align:center;font-size:12px;color:var(--mut);background:#fafbfd}
+table.xl td.dn.mon{color:var(--pri);font-weight:700}
+table.xl td.use{padding:0 8px;font-size:13px;background:#fafbfd;overflow:hidden;text-overflow:ellipsis}
+table.xl td.x{text-align:center}
+table.xl input{border:0;border-radius:0;background:transparent;padding:0 8px;height:32px;width:100%;font-size:14px}
+table.xl input:focus{outline:2px solid var(--pri);outline-offset:-2px;background:#fff;border:0}
+table.xl input.bad{background:var(--redbg);color:var(--red)}
+table.xl tr.sep td{background:#d5dce7;height:26px;padding:0}
+.xbtn{border:0;background:transparent;color:#a3adbb;font-size:14px;height:32px;width:100%}
+.xbtn:hover{color:var(--red);background:var(--redbg)}
 
-  /* ---------- LIBRARY ---------- */
-  #view-library{position:absolute; inset:0; display:flex; flex-direction:column; background:
-    radial-gradient(1200px 600px at 20% -10%, #263041 0%, var(--ink) 55%);
-  }
-  .topbar{
-    padding: calc(18px + var(--safe-top)) 22px 14px;
-    display:flex; align-items:baseline; justify-content:space-between;
-    border-bottom:1px solid rgba(255,255,255,0.07);
-  }
-  .brand{font-family:var(--serif); font-size:26px; letter-spacing:0.3px; color:var(--paper);}
-  .brand em{font-style:italic; color:var(--brass-2);}
-  .subcount{font-size:12.5px; color:rgba(243,234,216,0.5); margin-top:2px;}
-  .scan-fab{
-    width:46px; height:46px; border-radius:50%;
-    background:var(--brass); color:var(--ink);
-    display:flex; align-items:center; justify-content:center;
-    box-shadow:0 6px 16px rgba(185,139,78,0.35);
-    flex-shrink:0;
-  }
-  .scan-fab svg{width:22px; height:22px;}
-  .topbar-actions{display:flex; align-items:center; gap:10px;}
-  .settings-btn{
-    width:40px; height:40px; border-radius:50%; background:rgba(255,255,255,0.08);
-    color:var(--paper); display:flex; align-items:center; justify-content:center; flex-shrink:0;
-  }
-  .settings-btn svg{width:19px; height:19px;}
+/* hedef / tamamlanan sütunu */
+table.xl td.tg input{text-align:center;font-variant-numeric:tabular-nums}
+table.xl td.tg.anchor input{font-weight:700}
+table.xl td.tg.anchor{box-shadow:inset 3px 0 0 var(--pri)}
+table.xl td.tg.near{background:var(--ambbg)}
+table.xl td.tg.near input{color:var(--amb);font-weight:600}
+table.xl td.tg.done{background:var(--okbg)}
+table.xl td.tg.done input{color:var(--ok);font-weight:700}
 
-  #shelf{flex:1; overflow-y:auto; padding:22px 20px calc(40px + var(--safe-bottom));}
-  .grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fill, minmax(112px,1fr));
-    gap:22px 16px;
-  }
-  .book-card{display:flex; flex-direction:column; gap:8px; text-align:left; cursor:pointer;}
-  .spine{
-    position:relative; aspect-ratio:3/4.2; border-radius:3px 7px 7px 3px;
-    background:linear-gradient(135deg,#3a2f2a,#241c18);
-    box-shadow: -3px 0 0 rgba(0,0,0,0.35) inset, 0 10px 18px rgba(0,0,0,0.4);
-    overflow:hidden;
-    border:1px solid rgba(0,0,0,0.4);
-  }
-  .spine img{width:100%; height:100%; object-fit:cover; display:block; opacity:0.96;}
-  .spine .spine-edge{position:absolute; left:0; top:0; bottom:0; width:9px; background:linear-gradient(90deg, rgba(255,255,255,0.15), rgba(0,0,0,0.25));}
-  .spine .no-cover{width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:rgba(243,234,216,0.35); font-family:var(--serif); font-size:34px;}
-  .edit-fab{position:absolute; top:6px; right:6px; z-index:2; width:27px; height:27px; border-radius:50%; background:rgba(15,18,22,0.62); backdrop-filter:blur(2px); display:flex; align-items:center; justify-content:center; color:var(--paper);}
-  .edit-fab svg{width:13px; height:13px;}
-  .book-title{font-family:var(--serif); font-size:14.5px; line-height:1.25; color:var(--paper);}
-  .book-meta{font-size:11px; color:rgba(243,234,216,0.45);}
+/* ürün kodu hücresi (açılır liste oku) */
+table.xl td.cd{position:relative}
+table.xl td.cd input{padding-right:22px}
+table.xl td.cd::after{content:'▾';position:absolute;right:7px;top:8px;color:#9aa5b5;font-size:12px;pointer-events:none}
 
-  .empty-state{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px; text-align:center; gap:18px;}
-  .empty-state svg{width:88px; height:88px; opacity:0.5;}
-  .empty-state h2{font-family:var(--serif); font-weight:400; font-size:21px; margin:0; color:var(--paper);}
-  .empty-state p{margin:0; font-size:14px; color:rgba(243,234,216,0.55); max-width:260px; line-height:1.5;}
-  .cta-btn{
-    margin-top:6px; background:var(--brass); color:var(--ink); font-size:14.5px; font-weight:600;
-    padding:12px 26px; border-radius:999px;
-  }
+/* tarih hücresi + takvim */
+table.xl td.dt{position:relative}
+table.xl td.dt input[data-f=date]{width:calc(100% - 32px)}
+.calbtn{position:absolute;right:0;top:0;height:32px;width:32px;border:0;background:transparent;font-size:15px;padding:0}
+.calbtn:hover{background:#e7f0ff}
+table.xl input.dpick{position:absolute;right:0;bottom:0;width:1px;height:1px;padding:0;opacity:0;pointer-events:none;border:0}
 
-  /* ---------- READER ---------- */
-  #view-reader{position:absolute; inset:0; background:#0F1216; display:none; flex-direction:column;}
-  #view-reader.active{display:flex;}
-  .reader-top{
-    padding: calc(14px + var(--safe-top)) 14px 10px; display:flex; align-items:center; gap:10px;
-    background:linear-gradient(#0F1216, rgba(15,18,22,0.0));
-    position:relative; z-index:5;
-  }
-  .icon-btn{width:38px; height:38px; display:flex; align-items:center; justify-content:center; border-radius:50%; color:var(--paper);}
-  .btn-done{height:38px; padding:0 14px; border-radius:999px; background:rgba(185,139,78,0.22); color:var(--brass-2); font-size:13px; font-weight:700; flex-shrink:0;}
-  /* Reading mode strips the UI down to just two floating buttons over a
-     full-bleed page: no top/bottom bars at all. Edit mode (entered via the
-     library pencil icon, or "Sayfaları Yönet" while reading) shows the full
-     bars (title, page count, Bitti, book menu, add-page) and hides the
-     floating buttons instead. */
-  #view-reader.mode-read .edit-only{ display:none !important; }
-  #view-reader.mode-edit .read-only{ display:none !important; }
-  .float-btn{
-    position:absolute; z-index:9;
-    background:rgba(15,18,22,0.55); backdrop-filter:blur(3px);
-    color:var(--paper); display:flex; align-items:center; justify-content:center;
-    border-radius:999px; border:1px solid rgba(255,255,255,0.08);
-  }
-  .float-back{ top:calc(10px + var(--safe-top)); left:12px; width:38px; height:38px; }
-  .float-back svg{width:19px; height:19px;}
-  .float-mark{
-    bottom:calc(14px + var(--safe-bottom)); left:50%; transform:translateX(-50%);
-    padding:10px 18px; gap:7px; font-size:13px; font-weight:600;
-  }
-  .float-mark svg{width:15px; height:15px;}
-  .float-mark.on{ background:rgba(185,139,78,0.55); color:var(--ink); }
-  .icon-btn svg{width:20px; height:20px;}
-  .reader-title{flex:1; min-width:0;}
-  .reader-title .t{font-family:var(--serif); font-size:15px; color:var(--paper); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-  .reader-title .p{font-size:11px; color:rgba(243,234,216,0.45); margin-top:1px;}
+/* ürün kodu açılır listesi */
+#codeMenu{position:fixed;display:none;z-index:50;background:#fff;border:1px solid #b8c2d1;border-radius:8px;box-shadow:0 8px 24px rgba(16,24,38,.22);overflow:auto;min-width:220px;max-height:260px;font-size:14px}
+.mi{padding:8px 10px;cursor:pointer;display:flex;justify-content:space-between;gap:14px;border-bottom:1px solid #f0f2f6}
+.mi span{color:var(--mut);font-size:12px}
+.mi.act,.mi:hover{background:#e7f0ff}
+.mi.ex b{color:var(--pri)}
+.mnone{padding:10px;color:var(--mut);font-size:13px}
 
-  .stage-wrap{flex:1; position:relative; display:flex; align-items:center; justify-content:center; padding:6px 14px; overflow:hidden;}
-  .book-stage{
-    position:relative; width:100%; height:100%; max-width:560px;
-    perspective:2400px; touch-action:none;
-  }
-  .leaf{
-    position:absolute; inset:0; border-radius:2px;
-    box-shadow:0 18px 40px rgba(0,0,0,0.55);
-    background:#e9e2d0; overflow:hidden;
-  }
-  .leaf.base{z-index:1;}
-  .leaf-empty{width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:rgba(0,0,0,0.3); font-family:var(--serif);}
-  .reader-media{position:absolute; left:0; top:0; transform-origin:0 0; will-change:transform;}
-  .reader-media img{display:block; width:100%; height:100%; -webkit-user-drag:none; user-select:none;}
-  #highlightLayer{position:absolute; inset:0; pointer-events:none;}
-  .hl-rect{position:absolute; border:2px solid rgba(217,174,115,0.95); background:rgba(217,174,115,0.16); border-radius:2px;}
+/* alarm */
+#alarms{position:fixed;left:10px;right:10px;top:70px;z-index:60;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.alarm{pointer-events:auto;background:#b42318;color:#fff;padding:12px 14px;border-radius:10px;box-shadow:0 6px 20px rgba(0,0,0,.35);display:flex;gap:12px;align-items:center;justify-content:space-between;font-weight:600;animation:pulse 1.2s infinite}
+.alarm button{background:#fff;color:#b42318;border:0;border-radius:7px;padding:6px 12px;font-weight:700}
+.alarm.toast{background:#175cd3;animation:none}
+.alarm.toast button{color:#175cd3}
 
-  .flip{
-    position:absolute; inset:0; transform-style:preserve-3d;
-    transform-origin:left center; z-index:3; will-change:transform;
-  }
-  .flip .face{position:absolute; inset:0; backface-visibility:hidden; border-radius:2px; overflow:hidden; background:#e9e2d0;}
-  .flip .face img{width:100%; height:100%; object-fit:contain; display:block;}
-  .flip .front{transform:rotateY(0deg);}
-  .flip .back{transform:rotateY(180deg);}
-  .flip .shade{position:absolute; inset:0; background:linear-gradient(90deg, rgba(0,0,0,0.28), rgba(0,0,0,0) 40%); opacity:0; pointer-events:none;}
-
-  .tap-zone{position:absolute; top:0; bottom:0; width:26%; z-index:4;}
-  .tap-zone.left{left:0;}
-  .tap-zone.right{right:0;}
-
-  .mark-overlay{position:absolute; inset:0; z-index:6; display:none; touch-action:none; background:rgba(11,13,16,0.28);}
-  .mark-overlay.active{display:block;}
-  .mark-hint{position:absolute; top:10px; left:0; right:0; text-align:center; font-size:12px; color:var(--paper); pointer-events:none;}
-  .mark-cancel{position:absolute; top:8px; right:8px; background:rgba(0,0,0,0.5); color:var(--paper); font-size:12px; padding:6px 12px; border-radius:999px;}
-  .mark-rect{position:absolute; border:2px dashed var(--brass-2); background:rgba(217,174,115,0.18); pointer-events:none;}
-
-  .reader-bottom{padding:10px 16px calc(14px + var(--safe-bottom)); display:flex; align-items:center; justify-content:center; gap:10px;}
-  .mark-btn{
-    display:flex; align-items:center; gap:7px; background:rgba(255,255,255,0.07); color:var(--paper);
-    border:1px solid rgba(255,255,255,0.16); padding:9px 16px; border-radius:999px; font-size:13px; font-weight:600;
-  }
-  .mark-btn svg{width:15px; height:15px;}
-  .mark-btn.on{background:rgba(185,139,78,0.22); color:var(--brass-2); border-color:rgba(185,139,78,0.5);}
-  .add-page-btn{
-    display:flex; align-items:center; gap:8px; background:rgba(185,139,78,0.16); color:var(--brass-2);
-    border:1px solid rgba(185,139,78,0.4); padding:9px 16px; border-radius:999px; font-size:13px; font-weight:600;
-  }
-  .add-page-btn svg{width:15px; height:15px;}
-
-  /* ---------- SCAN ---------- */
-  #view-scan{position:absolute; inset:0; background:#000; display:none; flex-direction:column; z-index:20;}
-  #view-scan.active{display:flex;}
-  .scan-top{
-    padding: calc(14px + var(--safe-top)) 16px 10px; display:flex; align-items:center; justify-content:space-between; color:var(--paper); z-index:2;
-  }
-  .scan-top .count{font-size:13px; color:rgba(243,234,216,0.65);}
-  .camera-wrap{flex:1; position:relative; background:#111; overflow:hidden;}
-  #camVideo{width:100%; height:100%; object-fit:cover; display:block;}
-  .cam-fallback{position:absolute; inset:0; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:14px; padding:30px; text-align:center; color:rgba(243,234,216,0.7);}
-  .guide-frame{position:absolute; inset:6% 5%; border:1.5px dashed rgba(243,234,216,0.55); border-radius:8px; pointer-events:none; transition:border-color 200ms, border-style 200ms;}
-  .guide-frame.state-detecting{border-style:solid; border-color:rgba(217,174,115,0.9);}
-  .guide-frame.state-stable{border-style:solid; border-color:#7CC28A;}
-  .auto-pill{padding:7px 12px; border-radius:999px; background:rgba(255,255,255,0.1); color:rgba(243,234,216,0.75); font-size:11.5px; font-weight:600; white-space:nowrap; flex-shrink:0;}
-  .auto-pill.on{background:rgba(185,139,78,0.3); color:var(--brass-2);}
-  .auto-quad-svg{position:absolute; inset:0; width:100%; height:100%; pointer-events:none; display:none; z-index:2;}
-  #view-scan.auto-on .auto-quad-svg{display:block;}
-  #autoQuadPoly{fill:rgba(217,174,115,0.16); stroke:#D9AE73; stroke-width:0.6; transition:opacity 150ms;}
-  .auto-hint{position:absolute; left:12px; right:12px; bottom:10px; text-align:center; font-size:11.5px; color:rgba(243,234,216,0.7); background:rgba(0,0,0,0.35); padding:6px 10px; border-radius:8px; pointer-events:none; display:none;}
-  #view-scan.auto-on .auto-hint{display:block;}
-  .scan-bottom{padding:22px 20px calc(26px + var(--safe-bottom)); display:flex; align-items:center; justify-content:center; gap:36px;}
-  .shutter{
-    width:70px; height:70px; border-radius:50%; background:var(--paper); border:4px solid rgba(243,234,216,0.35);
-  }
-  .side-btn{width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,0.1); color:var(--paper); display:flex; align-items:center; justify-content:center;}
-  .side-btn svg{width:20px; height:20px;}
-  input#galleryInput{display:none;}
-
-  /* ---------- CROP ---------- */
-  #view-crop{position:absolute; inset:0; background:#0B0D10; display:none; flex-direction:column; z-index:21; height:100dvh;}
-  #view-crop.active{display:flex;}
-  .crop-top{padding: calc(14px + var(--safe-top)) 16px 8px; display:flex; align-items:center; justify-content:space-between; color:var(--paper); flex-shrink:0;}
-  .crop-top button{font-size:14px; color:var(--brass-2); font-weight:600; display:flex; align-items:center; gap:6px; padding:6px;}
-  .crop-tools{display:flex; gap:6px;}
-  .crop-tools button{width:38px; height:38px; border-radius:50%; background:rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center;}
-  .crop-tools button svg{width:18px; height:18px; color:var(--paper);}
-  .crop-tools button.ai{background:rgba(185,139,78,0.22);}
-  .crop-tools button.ai svg{color:var(--brass-2);}
-  .crop-tools button.loading{opacity:0.55; pointer-events:none;}
-  .crop-tools button.loading svg{animation:spin 900ms linear infinite;}
-  @keyframes spin{ to{ transform:rotate(360deg); } }
-
-  .crop-stage{flex:1 1 auto; position:relative; min-height:0; overflow:hidden; touch-action:none;}
-  #cropViewport{position:absolute; inset:0; overflow:hidden; background:#15181c; touch-action:none;}
-  #cropImg{position:absolute; left:0; top:0; transform-origin:top left; display:block; user-select:none; -webkit-user-drag:none; pointer-events:none; will-change:transform;}
-  .crop-dim{position:absolute; inset:0; pointer-events:none;}
-  .crop-dim i{position:absolute; display:block; background:rgba(0,0,0,0.55);}
-  .crop-rect{position:absolute; border:1.5px solid var(--brass-2); box-shadow:0 0 0 1px rgba(0,0,0,0.4); touch-action:none;}
-  .crop-rect .third{position:absolute; background:rgba(243,234,216,0.35);}
-  .crop-rect .third.v1{left:33.333%; top:0; bottom:0; width:1px;}
-  .crop-rect .third.v2{left:66.666%; top:0; bottom:0; width:1px;}
-  .crop-rect .third.h1{top:33.333%; left:0; right:0; height:1px;}
-  .crop-rect .third.h2{top:66.666%; left:0; right:0; height:1px;}
-  .handle{position:absolute; width:44px; height:44px; margin:-22px; touch-action:none;}
-  .handle::after{content:""; position:absolute; inset:17px; border-radius:50%; background:var(--brass-2); border:2px solid #14171b; box-shadow:0 1px 4px rgba(0,0,0,0.5);}
-  .hint{position:absolute; left:0; right:0; bottom:10px; text-align:center; font-size:11.5px; color:rgba(243,234,216,0.55); pointer-events:none;}
-
-  .filters-row{display:flex; gap:10px; padding:12px 16px; overflow-x:auto; flex-shrink:0;}
-  .filter-chip{flex-shrink:0; padding:8px 16px; border-radius:999px; font-size:12.5px; background:rgba(255,255,255,0.08); color:rgba(243,234,216,0.7); border:1px solid transparent;}
-  .filter-chip.on{background:rgba(185,139,78,0.2); color:var(--brass-2); border-color:rgba(185,139,78,0.5);}
-  .filter-chip.ai-chip.on{background:rgba(185,139,78,0.32);}
-  .filter-chip.loading{opacity:0.55; pointer-events:none;}
-  .crop-bottom{padding:6px 20px calc(18px + var(--safe-bottom)); display:flex; gap:12px; flex-shrink:0;}
-  .btn-outline{flex:1; padding:13px; border-radius:12px; border:1px solid rgba(243,234,216,0.25); color:var(--paper); font-size:14px;}
-  .btn-solid{flex:1.4; padding:13px; border-radius:12px; background:var(--brass); color:var(--ink); font-size:14px; font-weight:700;}
-
-  /* ---------- MISC ---------- */
-  .sheet-mask{position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:30; display:none; align-items:flex-end;}
-  .sheet-mask.active{display:flex;}
-  .sheet{background:var(--paper-2); color:var(--charcoal); width:100%; border-radius:18px 18px 0 0; padding:20px 20px calc(20px + var(--safe-bottom));}
-  .sheet h3{margin:0 0 14px; font-family:var(--serif); font-weight:400; font-size:17px;}
-  .sheet input[type=text]{width:100%; padding:12px; border-radius:10px; border:1px solid var(--line); font-size:15px; font-family:inherit; background:#fff;}
-  .sheet-actions{display:flex; gap:10px; margin-top:16px;}
-  .sheet-actions button{flex:1; padding:12px; border-radius:10px; font-size:14px;}
-  .sheet-actions .save{background:var(--ink); color:var(--paper); font-weight:600;}
-  .sheet-actions .cancel{background:rgba(0,0,0,0.06);}
-  .sheet-actions .danger{background:var(--maroon); color:#fff; font-weight:600;}
-
-  .key-row{display:flex; gap:8px;}
-  .key-row input{flex:1;}
-  .key-row button{flex-shrink:0; width:44px; border-radius:10px; background:rgba(0,0,0,0.06); font-size:12px;}
-  .settings-note{font-size:12.5px; color:#6b6258; line-height:1.5; margin-top:10px;}
-  .settings-note a{color:var(--maroon);}
-
-  .fav-list{max-height:52vh; overflow-y:auto; display:flex; flex-direction:column; gap:10px; margin-top:4px;}
-  .fav-empty{font-size:13.5px; color:#6b6258; padding:14px 2px;}
-  .fav-row{display:flex; align-items:center; gap:12px; text-align:left;}
-  .fav-thumb{width:52px; height:68px; border-radius:6px; overflow:hidden; background:#ddd3bd; flex-shrink:0; border:1px solid var(--line);}
-  .fav-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
-  .fav-info{flex:1; min-width:0;}
-  .fav-info .fp{font-size:12px; color:#8a8074; margin-bottom:2px;}
-  .fav-info .fn{font-size:14px; color:var(--charcoal); overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;}
-  .fav-del{flex-shrink:0; width:34px; height:34px; border-radius:50%; background:rgba(110,42,56,0.1); color:var(--maroon); display:flex; align-items:center; justify-content:center;}
-  .fav-del svg{width:16px; height:16px;}
-  .fav-book{font-size:11px; color:var(--brass); font-weight:600; margin-bottom:1px;}
-
-  .pgm-row{display:flex; align-items:center; gap:12px;}
-  .pgm-info{flex:1; font-size:13.5px; color:var(--charcoal);}
-  .pgm-actions{display:flex; gap:6px; flex-shrink:0;}
-  .pgm-btn{width:32px; height:32px; border-radius:8px; background:rgba(0,0,0,0.06); display:flex; align-items:center; justify-content:center; font-size:14px; color:var(--charcoal);}
-  .pgm-btn:disabled{opacity:0.25;}
-  .pgm-btn.danger{background:rgba(110,42,56,0.12); color:var(--maroon);}
-  .pgm-btn svg{width:15px; height:15px;}
-
-  .toast{position:fixed; left:50%; bottom:calc(30px + var(--safe-bottom)); transform:translateX(-50%); background:rgba(20,20,20,0.92); color:#fff; padding:10px 18px; border-radius:999px; font-size:13px; z-index:60; opacity:0; pointer-events:none; transition:opacity .25s;}
-  .toast.show{opacity:1;}
-
-  @media (prefers-reduced-motion: reduce){
-    .flip{transition:none !important;}
-  }
+/* yedek */
+#bkBox{display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:3px;flex:0 0 auto}
+#bkBox .ibs{display:flex;gap:4px}
+#bkBox .ib{background:#1b2740;border:1px solid #2b3a58;color:#fff;border-radius:6px;padding:3px 9px;font-size:14px;line-height:1.3}
+#bkStat{font-size:11px;color:#9fb0c8;cursor:pointer;white-space:nowrap}
+#bkStat::before{content:'● ';color:#34d399}
+#bkStat.warn::before{color:#fbbf24}
+#bkStat.bad::before{color:#f87171}
+#bkStat.warn,#bkStat.bad{color:#fde68a}
+.bkrow{display:grid;grid-template-columns:130px 1fr;gap:8px;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+.bkrow>div:first-child{color:var(--mut)}
+.hrow{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.hrow small{color:var(--mut)}
+.chk{display:flex;gap:8px;align-items:center;margin-top:12px;font-size:14px}
+.chk input{width:auto}
 </style>
 </head>
 <body>
-<div id="rotateGate">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M18 8l3 3-3 3" transform="translate(-1,-3) rotate(90 12 12)"/></svg>
-  <p>Kütüphanem sadece dikey konumda kullanılır. Devam etmek için telefonunu döndür.</p>
-</div>
-<div id="app">
 
-  <!-- LIBRARY -->
-  <div id="view-library">
-    <div class="topbar">
-      <div>
-        <div class="brand">Kütüphan<em>em</em></div>
-        <div class="subcount" id="shelfCount">Kütüphane boş</div>
-      </div>
-      <div class="topbar-actions">
-        <button class="settings-btn" id="btnAllFavorites" aria-label="Tüm favoriler">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17.3 6.2 20l1.1-6.5L2.5 9l6.6-1L12 2l2.9 6 6.6 1-4.8 4.5L18 20z"/></svg>
-        </button>
-        <button class="settings-btn" id="btnSettings" aria-label="Ayarlar">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        </button>
-        <button class="scan-fab" id="btnNewBook" aria-label="Yeni kitap tara">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-        </button>
-      </div>
+<div id="top">
+  <div class="lbl">KALAN<br>STOK</div>
+  <div id="chips"></div>
+  <div id="bkBox">
+    <div class="ibs">
+      <button class="ib" id="bkDl" title="Yedeği dosyaya indir">💾</button>
+      <button class="ib" id="bkImp" title="Yedek dosyasından içe aktar">📂</button>
     </div>
-    <div id="shelf">
-      <div class="grid" id="grid"></div>
-    </div>
-  </div>
-
-  <!-- READER -->
-  <div id="view-reader">
-    <div class="reader-top edit-only">
-      <button class="icon-btn" id="btnBackLib" aria-label="Kütüphaneye dön">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-      </button>
-      <div class="reader-title">
-        <div class="t" id="readerTitle">—</div>
-        <div class="p" id="readerPage">—</div>
-      </div>
-      <button class="btn-done" id="btnReaderDone">Bitti</button>
-      <button class="icon-btn" id="btnBookMenu" aria-label="Kitap seçenekleri">
-        <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
-      </button>
-    </div>
-    <div class="stage-wrap">
-      <div class="book-stage" id="bookStage">
-        <div class="leaf base" id="baseLeaf">
-          <div class="reader-media" id="readerMedia" style="display:none;">
-            <img id="readerImg" alt="">
-            <div id="highlightLayer"></div>
-          </div>
-          <div class="leaf-empty" id="leafEmpty">Sayfa yok</div>
-        </div>
-        <div class="tap-zone left" id="zoneLeft"></div>
-        <div class="tap-zone right" id="zoneRight"></div>
-        <div class="mark-overlay" id="markOverlay">
-          <div class="mark-hint">Bir bölgeyi sürükleyerek işaretle</div>
-          <button class="mark-cancel" id="btnMarkCancel">Vazgeç</button>
-        </div>
-      </div>
-    </div>
-    <div class="reader-bottom edit-only">
-      <button class="mark-btn mark-toggle-btn" id="btnMarkToggle">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-        İşaretle
-      </button>
-      <button class="add-page-btn" id="btnAddPage">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-        Sayfa ekle
-      </button>
-    </div>
-    <!-- Reading mode: everything above is hidden; only these two floating,
-         translucent buttons remain over the full-bleed page. -->
-    <button class="float-btn float-back read-only" id="floatBackLib" aria-label="Kütüphaneye dön">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-    </button>
-    <button class="float-btn float-mark read-only mark-toggle-btn" id="floatMarkToggle" aria-label="İşaretle">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-      İşaretle
-    </button>
-  </div>
-
-  <!-- SCAN (camera) -->
-  <div id="view-scan">
-    <div class="scan-top">
-      <button class="icon-btn" id="btnScanClose" aria-label="Kapat">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
-      </button>
-      <div class="count" id="scanCount">0 sayfa tarandı</div>
-      <button class="auto-pill" id="btnAutoScanToggle" aria-pressed="false">Otomatik: Kapalı</button>
-    </div>
-    <div class="camera-wrap">
-      <video id="camVideo" autoplay playsinline muted></video>
-      <svg id="autoQuadSvg" viewBox="0 0 100 100" preserveAspectRatio="none" class="auto-quad-svg">
-        <polygon id="autoQuadPoly" points=""></polygon>
-      </svg>
-      <div class="guide-frame" id="guideFrame"></div>
-      <div class="auto-hint" id="autoHint">Sayfayı çerçeveye getir — hizalanınca otomatik çekilecek</div>
-      <div class="cam-fallback" id="camFallback" style="display:none;">
-        <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7l1.5-3h5L16 7"/><circle cx="12" cy="13.5" r="3.4"/></svg>
-        <div>Kamera açılamadı. Galeriden seçebilirsin.</div>
-      </div>
-    </div>
-    <div class="scan-bottom">
-      <button class="side-btn" id="btnGallery" aria-label="Galeriden seç">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-      </button>
-      <button class="shutter" id="btnShutter" aria-label="Fotoğraf çek"></button>
-      <button class="side-btn" id="btnScanDone" aria-label="Bitir">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-      </button>
-    </div>
-    <input type="file" id="galleryInput" accept="image/*" capture="environment" multiple>
-  </div>
-
-  <!-- CROP -->
-  <div id="view-crop">
-    <div class="crop-top">
-      <button id="btnCropCancel">Vazgeç</button>
-      <div class="crop-tools">
-        <button class="ai" id="btnCropAi" aria-label="Yapay zeka ile perspektifi düzelt">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8"/></svg>
-        </button>
-        <button id="btnCropFlip" aria-label="Aynala">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M17 7l3 3-3 3M7 7l-3 3 3 3"/></svg>
-        </button>
-        <button id="btnCropRotate" aria-label="Döndür">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>
-        </button>
-        <button id="btnCropReset" aria-label="Sıfırla">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v6h6"/></svg>
-        </button>
-      </div>
-    </div>
-    <div class="crop-stage">
-      <div id="cropViewport">
-        <canvas id="cropImg"></canvas>
-        <div class="crop-dim">
-          <i id="dimTop"></i><i id="dimBottom"></i><i id="dimLeft"></i><i id="dimRight"></i>
-        </div>
-        <div class="crop-rect" id="cropRect">
-          <div class="third v1"></div><div class="third v2"></div>
-          <div class="third h1"></div><div class="third h2"></div>
-        </div>
-        <div class="handle" id="hTL"></div>
-        <div class="handle" id="hTR"></div>
-        <div class="handle" id="hBL"></div>
-        <div class="handle" id="hBR"></div>
-      </div>
-      <div class="hint">✨ ile çapraz çekimi düzleştir · pinch ile yakınlaştır · köşelerden kırp</div>
-    </div>
-    <div class="filters-row">
-      <button class="filter-chip on" data-filter="none">Orijinal</button>
-      <button class="filter-chip" data-filter="bw">Siyah-Beyaz Tarama</button>
-      <button class="filter-chip" data-filter="enhance">Netleştir</button>
-      <button class="filter-chip ai-chip" data-filter="ai" id="chipAiClean">✨ AI Temiz Tarama</button>
-    </div>
-    <div class="crop-bottom">
-      <button class="btn-outline" id="btnCropSkip">Kırpmadan kaydet</button>
-      <button class="btn-solid" id="btnCropSave">Sayfayı kaydet</button>
-    </div>
-  </div>
-
-</div>
-
-<!-- Bottom sheet (rename / new book / mark note / delete) -->
-<div class="sheet-mask" id="sheetMask">
-  <div class="sheet">
-    <h3 id="sheetTitle">Kitap adı</h3>
-    <input type="text" id="bookNameInput" placeholder="ör. Fizik Ders Notları">
-    <div class="sheet-actions" id="importRow" style="display:none;">
-      <button class="cancel" id="sheetImportPdf" style="width:100%;">📄 PDF'ten içe aktar (kamera yerine)</button>
-    </div>
-    <div class="sheet-actions" id="favRow" style="display:none;">
-      <button class="cancel" id="sheetOpenFavs" style="width:100%;">☆ Favoriler</button>
-    </div>
-    <div class="sheet-actions" id="pagesRow" style="display:none;">
-      <button class="cancel" id="sheetOpenPages" style="width:100%;">📄 Sayfaları Yönet</button>
-    </div>
-    <div class="sheet-actions" id="exportPdfRow" style="display:none;">
-      <button class="cancel" id="sheetExportPdf" style="width:100%;">⬇️ PDF olarak indir (yedekle)</button>
-    </div>
-    <div class="sheet-actions" id="importPdfRow" style="display:none;">
-      <button class="cancel" id="sheetImportIntoPdf" style="width:100%;">📄 PDF'ten sayfa ekle</button>
-    </div>
-    <div class="sheet-actions">
-      <button class="cancel" id="sheetCancel">Vazgeç</button>
-      <button class="save" id="sheetSave">Kaydet</button>
-    </div>
-    <div class="sheet-actions" id="deleteRow" style="display:none;">
-      <button class="danger" id="sheetDelete" style="width:100%;">Kitabı sil</button>
-    </div>
+    <div id="bkStat" class="ok" title="Otomatik yedek durumu">Yedek</div>
   </div>
 </div>
+<div id="alarms"></div>
+<div id="codeMenu"></div>
 
-<!-- Settings sheet (API key) -->
-<div class="sheet-mask" id="settingsMask">
-  <div class="sheet">
-    <h3>Ayarlar</h3>
-    <div class="key-row">
-      <input type="password" id="apiKeyInput" placeholder="AIza...">
-      <button id="btnToggleKey" type="button">👁</button>
-    </div>
-    <div class="settings-note">
-      Otomatik hizalama, AI temiz tarama ve yazı okuma özellikleri kendi Google
-      Gemini API anahtarınla çalışır. Anahtar sadece bu telefonun tarayıcısında
-      saklanır, hiçbir sunucuya gönderilmez — sadece analiz sırasında doğrudan
-      Google'ın Gemini API'sine gider. Anahtarını
-      <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>
-      üzerinden, Google hesabınla ücretsiz olarak alabilirsin.
-    </div>
-    <div class="sheet-actions">
-      <button class="cancel" id="settingsCancel">Vazgeç</button>
-      <button class="save" id="settingsSave">Kaydet</button>
-    </div>
-  </div>
+<div class="tabs">
+  <button class="tab on" data-tab="takip">📋 Ürün Takip</button>
+  <button class="tab" data-tab="urun">🔩 Ürün Kodları</button>
+  <button class="tab" data-tab="stok">📦 Stok</button>
+  <button class="tab" data-tab="yedek">💾 Yedek</button>
 </div>
 
-<!-- Favorites sheet (per-book or global, title/list set dynamically) -->
-<div class="sheet-mask" id="favoritesMask">
-  <div class="sheet">
-    <h3 id="favTitle">Favoriler</h3>
-    <div class="fav-list" id="favList"></div>
-    <div class="sheet-actions">
-      <button class="cancel" id="favClose" style="width:100%;">Kapat</button>
-    </div>
-  </div>
-</div>
+<main>
 
-<!-- Mark note sheet -->
-<div class="sheet-mask" id="markNoteMask">
-  <div class="sheet">
-    <h3>İşareti kaydet</h3>
-    <div class="key-row">
-      <input type="text" id="markNoteInput" placeholder="Not (opsiyonel)">
-      <button id="btnOcrRegion" type="button" aria-label="Yazıyı AI ile oku">✨</button>
+<!-- ÜRÜN TAKİP (varsayılan, Excel tarzı) -->
+<section id="tab-takip">
+  <div class="card">
+    <div class="sum" id="entSum"></div>
+    <div class="tw"><table class="xl">
+      <colgroup>
+        <col style="width:112px"><col style="width:40px"><col style="width:150px"><col style="width:80px"><col style="width:150px"><col style="width:100px">
+        <col style="width:105px"><col style="width:140px"><col><col style="width:185px"><col style="width:36px">
+      </colgroup>
+      <thead><tr>
+        <th title="Hedef adedi buraya yaz. Sonraki aynı kodlu satırlarda tamamlanan/hedef görünür.">Hedef / Tamam</th><th></th><th>Ürün kodu</th><th>Adet</th><th>Tarih</th><th>Gün</th><th>Vardiya</th><th>Operatör</th><th>Açıklama</th><th>Stoktan eksilen</th><th></th>
+      </tr></thead>
+      <tbody id="entBody"></tbody>
+    </table></div>
+    <div class="hint">
+      <b>Hedef / Tamam:</b> en soldaki hücreye bir sayı yazarsan o satırdaki kod için hedef adet olur. Aynı koddan sonraki satırlarda <b>5034/6000</b> gibi toplam anlık görünür (o satır dahil). Hedefe ulaşınca alarm çalar, hücre yeşil olur. Başka bir satıra yeni sayı yazarsan sayım o satırdan sıfırlanır.<br>
+      <b>Ürün kodu:</b> hücreye tıklayınca liste açılır, seçersin veya yazarsın. Listede varsa kendiliğinden seçilir. Kod seçilince tarih bugüne ayarlanır. Tarihi yazabilir ya da 📅 ile seçebilirsin; <b>6.11</b> yazman yeterli.<br>
+      <b>Enter</b> alt satıra, <b>Shift+Enter</b> üst satıra geçer. Vardiyaya <b>1</b>, <b>2</b> veya <b>3</b> yazabilirsin. Excel'den yapıştırabilirsin. Yeni haftadan önce boş satır otomatik eklenir.
     </div>
-    <div class="sheet-actions">
-      <button class="cancel" id="markNoteCancel">Vazgeç</button>
-      <button class="save" id="markNoteSave">Kaydet</button>
-    </div>
+    <datalist id="opList"></datalist>
+    <datalist id="shiftList"></datalist>
   </div>
-</div>
+</section>
 
-<!-- Manage pages sheet (reorder / delete) -->
-<div class="sheet-mask" id="pagesManageMask">
-  <div class="sheet">
-    <h3>Sayfaları Yönet</h3>
-    <div class="fav-list" id="pagesManageList"></div>
-    <div class="sheet-actions">
-      <button class="cancel" id="pagesManageClose" style="width:100%;">Kapat</button>
+<!-- ÜRÜN KODLARI -->
+<section id="tab-urun" class="hide">
+  <div class="card">
+    <h2>Yeni ürün kodu</h2>
+    <div class="grid">
+      <div><label>Ürün kodu</label><input id="pCode" placeholder="ör. 12345-A"></div>
+      <div><label>Ham malzeme (stoktan seç)</label><select id="pStock"></select></div>
+      <div><label>Ham stok boyu (mm)</label><input id="pRaw" inputmode="decimal" placeholder="ör. 85"></div>
+      <div><button class="btn" id="pAdd" style="width:100%">Ürün ekle</button></div>
     </div>
+    <div class="hint">Ham stok boyu: bir parça için kesilecek ham boy. Bir çubuktan kaç parça çıktığı kesim payı da hesaba katılarak bulunur.</div>
   </div>
-</div>
 
-<input type="file" id="pdfImportInput" accept="application/pdf" style="display:none;">
-<div class="toast" id="toast"></div>
+  <div class="card">
+    <h2>Ürün kodları</h2>
+    <div class="tw"><table>
+      <thead><tr>
+        <th>Ürün kodu</th><th>Ham malzeme</th><th>Ham boy (mm)</th>
+        <th class="num">Çubuktan çıkan</th><th class="num">Toplam üretilen</th><th class="num">Toplam eksilen</th>
+      </tr></thead>
+      <tbody id="prodBody"></tbody>
+    </table></div>
+    <div class="hint">Üretim adetleri "Ürün Takip" ekranından girilir, bu tablo toplamları gösterir.</div>
+  </div>
+</section>
+
+<!-- STOK -->
+<section id="tab-stok" class="hide">
+  <div class="card">
+    <h2 id="fTitle">Yeni stok girişi</h2>
+    <div class="grid">
+      <div><label>Çap (mm)</label><input id="fD" inputmode="decimal" placeholder="25"></div>
+      <div><label>Boy (mm)</label><input id="fL" inputmode="decimal" placeholder="3000"></div>
+      <div><label>Çubuk ağırlığı (kg)</label><input id="fW" inputmode="decimal" placeholder="otomatik"></div>
+      <div><label>Stok adedi (çubuk)</label><input id="fQty" inputmode="decimal" placeholder="0"></div>
+      <div><label>Toplam kg</label><input id="fKg" inputmode="decimal" placeholder="0"></div>
+      <div><label>Son geliş tarihi</label><input id="fDate" type="date"></div>
+      <div><label>Uyarı limiti (çubuk)</label><input id="fWarn" inputmode="decimal" placeholder="genel"></div>
+    </div>
+    <div class="row">
+      <button class="btn" id="fSave">Stoğu kaydet</button>
+      <button class="btn sec hide" id="fCancel">Vazgeç</button>
+    </div>
+    <div class="hint">Adet girersen toplam kg, kg girersen çubuk sayısı otomatik hesaplanır. Çubuk ağırlığı çap × boydan (çelik, yoğunluk ayarlardan) hesaplanır; kendin yazarsan o değer kullanılır, silersen tekrar otomatik olur.</div>
+  </div>
+
+  <div class="card">
+    <h2>Stok listesi</h2>
+    <div class="tw"><table>
+      <thead><tr>
+        <th>Ölçü</th><th class="num">Çubuk kg</th><th>Son geliş</th><th class="num">Toplam gelen</th>
+        <th class="num">Kullanılan</th><th class="num">Kalan çubuk</th><th class="num">Kalan kg</th><th class="num">Uyarı</th><th></th>
+      </tr></thead>
+      <tbody id="stockBody"></tbody>
+    </table></div>
+  </div>
+
+  <div class="card">
+    <details>
+      <summary>⚙️ Ayarlar</summary>
+      <div class="grid" style="margin-top:12px">
+        <div><label>Genel uyarı limiti (çubuk)</label><input id="sWarn" inputmode="decimal"></div>
+        <div><label>Kesim payı (mm, testere/alın)</label><input id="sKerf" inputmode="decimal"></div>
+        <div><label>Yoğunluk (g/cm³)</label><input id="sDens" inputmode="decimal"></div>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- YEDEK -->
+<section id="tab-yedek" class="hide">
+  <div class="card">
+    <h2>Otomatik yedek</h2>
+    <div class="hint" style="margin-top:0">Her değişiklikte veriler sormadan kendiliğinden yedeklenir.</div>
+    <div class="bkrow"><div>Tarayıcı yedeği</div><div id="bkBrowser"></div></div>
+    <div class="bkrow"><div>Yedek dosyası</div><div id="bkFile"></div></div>
+    <div class="row">
+      <button class="btn sec sm" id="bkLink">Yedek dosyası seç</button>
+      <button class="btn sm hide" id="bkGrant">İzin ver</button>
+      <button class="btn sec sm hide" id="bkUnlink">Bağlantıyı kaldır</button>
+    </div>
+    <label class="chk"><input type="checkbox" id="bkAutoDl"> Günde bir kez yedeği otomatik indir</label>
+    <div class="hint">Yedek dosyası seçersen program her değişiklikte o dosyayı kendisi günceller (masaüstü Chrome/Edge). Tarayıcıyı yeniden açtığında bir kez izin istenebilir. Dosya seçme desteklenmiyorsa günlük otomatik indirmeyi aç.</div>
+  </div>
+
+  <div class="card">
+    <h2>Dosya ile yedek</h2>
+    <div class="row" style="margin-top:0">
+      <button class="btn" id="bkExport">💾 Yedeği indir (JSON)</button>
+      <button class="btn sec" id="bkImport">📂 Yedek dosyasından içe aktar</button>
+    </div>
+    <div class="hint">İçe aktarmadan önce mevcut veriler otomatik yedeğe alınır, yanlışlıkla üzerine yazsan bile geçmişten geri dönebilirsin.</div>
+  </div>
+
+  <div class="card">
+    <h2>Otomatik yedek geçmişi</h2>
+    <div id="bkHist"></div>
+    <div class="hint">Son değişikliklerden en az 5 dakika arayla alınan yedekler tutulur. Son 40 yedek ile son 30 günün her güne ait bir yedeği saklanır.</div>
+  </div>
+</section>
+</main>
+<input type="file" id="imp" accept=".json,application/json" class="hide">
 
 <script>
-(function(){
-"use strict";
+const KEY='urunTakipV1';
+const $=id=>document.getElementById(id);
+const num=v=>{const n=parseFloat(String(v).replace(',','.'));return isFinite(n)?n:0};
+const fmt=(n,d=2)=>Number(n).toLocaleString('tr-TR',{maximumFractionDigits:d});
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let _c=0;
+const uid=()=>Date.now().toString(36)+(++_c).toString(36)+Math.random().toString(36).slice(2,5);
+const pad=n=>String(n).padStart(2,'0');
+const dstr=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const today=()=>dstr(new Date());
+const rnd=(x,n)=>String(Math.round(x*Math.pow(10,n))/Math.pow(10,n)).replace('.',',');
+const trDate=s=>{if(!s)return '-';const p=s.split('-');return p.length===3?p[2]+'.'+p[1]+'.'+p[0]:s};
+const dispDate=s=>s?trDate(s):'';
+const SHIFTS=['1. Vardiya','2. Vardiya','3. Vardiya'];
+const curShift=()=>{const h=new Date().getHours();return h>=8&&h<16?SHIFTS[0]:h>=16?SHIFTS[1]:SHIFTS[2]};
+const DAYS=['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
+const dayName=iso=>iso?DAYS[new Date(iso+'T00:00:00').getDay()]:'';
+const isMon=iso=>!!iso&&new Date(iso+'T00:00:00').getDay()===1;
+function weekKey(iso){
+  const d=new Date(iso+'T00:00:00');
+  d.setDate(d.getDate()-((d.getDay()+6)%7));
+  return dstr(d);
+}
+function parseDate(t){
+  t=String(t).trim();
+  if(!t)return '';
+  const mk=(y,mo,d)=>{const dt=new Date(y,mo-1,d);return(dt.getFullYear()===y&&dt.getMonth()===mo-1&&dt.getDate()===d)?dstr(dt):null};
+  let m=t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if(m)return mk(+m[1],+m[2],+m[3]);
+  m=t.match(/^(\d{1,2})[.\/\-](\d{1,2})(?:[.\/\-](\d{2,4}))?$/);
+  if(m){let y=m[3]?+m[3]:new Date().getFullYear();if(y<100)y+=2000;return mk(y,+m[2],+m[1])}
+  m=t.match(/^(\d{1,2})$/);
+  if(m){const n=new Date();return mk(n.getFullYear(),n.getMonth()+1,+m[1])}
+  return null;
+}
+function normShift(v){
+  v=String(v).trim();
+  if(/^[1-3]$/.test(v))return v+'. Vardiya';
+  const m=v.match(/^([1-3])\s*\.?\s*v/i);
+  return m?m[1]+'. Vardiya':v;
+}
 
-/* ============ INDEXEDDB ============ */
-const DB_NAME = "ciltli-db", DB_VER = 2;
-let db;
-function openDB(){
-  return new Promise((resolve,reject)=>{
-    const req = indexedDB.open(DB_NAME, DB_VER);
-    req.onupgradeneeded = (e)=>{
-      const d = e.target.result;
-      if(!d.objectStoreNames.contains("books")){
-        d.createObjectStore("books",{keyPath:"id"});
-      }
-      if(!d.objectStoreNames.contains("pages")){
-        const s = d.createObjectStore("pages",{keyPath:"id"});
-        s.createIndex("bookId","bookId",{unique:false});
-      }
-      if(!d.objectStoreNames.contains("highlights")){
-        const h = d.createObjectStore("highlights",{keyPath:"id"});
-        h.createIndex("bookId","bookId",{unique:false});
-      }
-    };
-    req.onsuccess = ()=>{ db = req.result; resolve(db); };
-    req.onerror = ()=> reject(req.error);
-  });
-}
-function tx(store, mode){ return db.transaction(store, mode).objectStore(store); }
-function idbGetAll(store){
-  return new Promise((res,rej)=>{
-    const r = tx(store,"readonly").getAll();
-    r.onsuccess = ()=>res(r.result); r.onerror=()=>rej(r.error);
-  });
-}
-function idbGetAllByIndex(store, index, key){
-  return new Promise((res,rej)=>{
-    const r = tx(store,"readonly").index(index).getAll(key);
-    r.onsuccess = ()=>res(r.result); r.onerror=()=>rej(r.error);
-  });
-}
-function idbPut(store, val){
-  return new Promise((res,rej)=>{
-    const r = tx(store,"readwrite").put(val);
-    r.onsuccess = ()=>res(val); r.onerror=()=>rej(r.error);
-  });
-}
-function idbDelete(store, key){
-  return new Promise((res,rej)=>{
-    const r = tx(store,"readwrite").delete(key);
-    r.onsuccess = ()=>res(); r.onerror=()=>rej(r.error);
-  });
-}
-function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+const newEntry=()=>({id:uid(),target:0,code:'',qty:0,date:'',shift:'',op:'',note:''});
+const isBlank=e=>!e.target&&!e.code&&!e.qty&&!e.date&&!e.shift&&!e.op&&!e.note;
 
-/* ============ STATE ============ */
-let books = [];           // {id,title,createdAt}
-let pagesByBook = {};      // bookId -> [{id,bookId,order,blob}]
-let highlightsByBook = {}; // bookId -> [{id,bookId,pageId,pageOrder,rx,ry,rw,rh,note,createdAt}]
-let currentBookId = null;
-let currentIndex = 0;
-let scanTargetBookId = null;
-let activeFilter = "none";
-let stream = null;
+function normalize(j){
+  j.settings=Object.assign({warn:10,kerf:0,dens:7.85,lastOp:'',lastShift:''},j.settings||{});
+  j.stocks=j.stocks||[];j.products=j.products||[];
+  if(!Array.isArray(j.entries)){
+    j.entries=[];
+    j.products.forEach(p=>{
+      if(p.made>0)j.entries.push({id:uid(),pid:p.id,qty:p.made,date:today(),shift:'',op:'',note:'Önceki toplam (aktarıldı)'});
+      delete p.made;
+    });
+  }
+  j.entries=j.entries.map(e=>{
+    if(!e.code&&e.pid){const p=j.products.find(x=>x.id===e.pid);e.code=p?p.code:''}
+    delete e.pid;
+    return Object.assign(newEntry(),e);
+  });
+  return j;
+}
+function load(){
+  try{const j=JSON.parse(localStorage.getItem(KEY));if(j&&j.stocks)return normalize(j)}catch(e){}
+  return normalize({});
+}
+let S=load();
+function snapshot(){
+  const en=S.entries.slice();
+  while(en.length&&isBlank(en[en.length-1]))en.pop();
+  return Object.assign({},S,{entries:en});
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(snapshot()))}catch(e){}}
 
-const $ = (sel)=>document.querySelector(sel);
-const els = {
-  viewLibrary: $("#view-library"), viewReader: $("#view-reader"),
-  viewScan: $("#view-scan"), viewCrop: $("#view-crop"),
-  grid: $("#grid"), shelfCount: $("#shelfCount"),
-  readerTitle: $("#readerTitle"), readerPage: $("#readerPage"),
-  bookStage: $("#bookStage"), baseLeaf: $("#baseLeaf"),
-  markOverlay: $("#markOverlay"), btnMarkToggle: $("#btnMarkToggle"),
-  camVideo: $("#camVideo"), camFallback: $("#camFallback"), guideFrame: $("#guideFrame"),
-  scanCount: $("#scanCount"), galleryInput: $("#galleryInput"),
-  btnAutoScanToggle: $("#btnAutoScanToggle"), autoQuadPoly: $("#autoQuadPoly"),
-  cropImg: $("#cropImg"), cropViewport: $("#cropViewport"), cropRect: $("#cropRect"),
-  sheetMask: $("#sheetMask"), sheetTitle: $("#sheetTitle"), bookNameInput: $("#bookNameInput"),
-  deleteRow: $("#deleteRow"), favRow: $("#favRow"), pagesRow: $("#pagesRow"), toast: $("#toast"),
-  importRow: $("#importRow"), exportPdfRow: $("#exportPdfRow"), importPdfRow: $("#importPdfRow"),
-  pdfImportInput: $("#pdfImportInput"),
-  settingsMask: $("#settingsMask"), apiKeyInput: $("#apiKeyInput"),
-  favoritesMask: $("#favoritesMask"), favTitle: $("#favTitle"), favList: $("#favList"),
-  markNoteMask: $("#markNoteMask"), markNoteInput: $("#markNoteInput"),
-  pagesManageMask: $("#pagesManageMask"), pagesManageList: $("#pagesManageList")
+/* ---------- hesaplar ---------- */
+const calcW=(d,l)=>Math.PI/4*Math.pow(d/10,2)*(l/10)*S.settings.dens/1000;
+const bw=s=>(s.wManual&&s.w>0)?s.w:calcW(s.d,s.l);
+const stockById=id=>S.stocks.find(s=>s.id===id);
+const norm=c=>String(c||'').trim().toLowerCase();
+const prodByCode=c=>norm(c)?S.products.find(p=>norm(p.code)===norm(c)):undefined;
+const uniqueContains=c=>{const q=norm(c);if(!q)return null;const m=S.products.filter(p=>norm(p.code).includes(q));return m.length===1?m[0]:null};
+const entById=id=>S.entries.find(e=>e.id===id);
+const partsPer=(s,p)=>{
+  if(!s||!p||p.raw<=0)return 0;
+  const k=S.settings.kerf||0;
+  return Math.max(0,Math.floor((s.l+k)/(p.raw+k)));
+};
+const entryBars=e=>{const p=prodByCode(e.code);if(!p)return 0;const pp=partsPer(stockById(p.stockId),p);return pp>0?(e.qty||0)/pp:0};
+const madeP=p=>S.entries.reduce((a,e)=>prodByCode(e.code)===p?a+(e.qty||0):a,0);
+const usedBarsP=p=>S.entries.reduce((a,e)=>prodByCode(e.code)===p?a+entryBars(e):a,0);
+const used=s=>S.entries.reduce((a,e)=>{const p=prodByCode(e.code);return p&&p.stockId===s.id?a+entryBars(e):a},0);
+const rem=s=>s.qty-used(s);
+const limit=s=>(s.warn!=null)?s.warn:S.settings.warn;
+const isLow=s=>rem(s)<=limit(s);
+const label=s=>'Ø'+fmt(s.d)+' × '+fmt(s.l)+' mm';
+
+/* ---------- hedef adet sayımı ---------- */
+/* Hedef yazılan satır o kod için yeni bir sayım başlatır; sonraki aynı kodlu satırlar toplanır. */
+function computeInfo(){
+  const rows=new Array(S.entries.length).fill(null),cur={},groups=[];
+  S.entries.forEach((e,i)=>{
+    const k=norm(e.code);if(!k)return;
+    if(e.target>0){const g={id:e.id,code:e.code,target:e.target,total:0};cur[k]=g;groups.push(g)}
+    const g=cur[k];if(!g)return;
+    g.total+=(e.qty||0);
+    rows[i]={cum:g.total,target:g.target};
+  });
+  return {rows,groups};
+}
+const tgText=inf=>inf?fmt(inf.cum,0)+'/'+fmt(inf.target,0):'';
+const tgClass=(e,inf)=>(inf?(inf.cum>=inf.target?'done':inf.cum>=0.9*inf.target?'near':''):'')+(e.target>0?' anchor':'');
+const tgTitle=inf=>inf?`Hedef ${fmt(inf.target,0)} · tamamlanan ${fmt(inf.cum,0)} · kalan ${fmt(Math.max(0,inf.target-inf.cum),0)}`:'Hedef adedi yaz';
+let activeTarget=null;
+function updateTargetCells(){
+  const info=computeInfo();
+  const trs=new Map();
+  body.querySelectorAll('tr[data-id]').forEach(tr=>trs.set(tr.dataset.id,tr));
+  S.entries.forEach((e,i)=>{
+    const tr=trs.get(e.id);if(!tr)return;
+    const inp=tr.querySelector('[data-f=target]'),inf=info.rows[i];
+    if(inp!==activeTarget)inp.value=tgText(inf);
+    inp.title=tgTitle(inf);
+    inp.parentNode.className='tg '+tgClass(e,inf);
+  });
+}
+/* alarm */
+let alarmed=new Set();
+function initAlarmed(){alarmed=new Set(computeInfo().groups.filter(g=>g.total>=g.target).map(g=>g.id))}
+function checkAlarms(){
+  computeInfo().groups.forEach(g=>{
+    const reached=g.total>=g.target;
+    if(reached&&!alarmed.has(g.id)){alarmed.add(g.id);raiseAlarm(g)}
+    else if(!reached)alarmed.delete(g.id);
+  });
+}
+function beep(){
+  try{
+    const ac=new (window.AudioContext||window.webkitAudioContext)();
+    [0,0.28,0.56].forEach(t=>{
+      const o=ac.createOscillator(),g=ac.createGain();
+      o.frequency.value=880;o.connect(g);g.connect(ac.destination);
+      g.gain.setValueAtTime(0.25,ac.currentTime+t);
+      g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+t+0.22);
+      o.start(ac.currentTime+t);o.stop(ac.currentTime+t+0.24);
+    });
+    setTimeout(()=>ac.close(),1500);
+  }catch(e){}
+  try{navigator.vibrate&&navigator.vibrate([250,100,250,100,500])}catch(e){}
+}
+function raiseAlarm(g){
+  const d=document.createElement('div');
+  d.className='alarm';
+  d.innerHTML=`<span>🔔 ${esc(g.code)}: hedef adede ulaşıldı (${fmt(g.total,0)}/${fmt(g.target,0)})</span><button>Tamam</button>`;
+  d.querySelector('button').onclick=()=>d.remove();
+  $('alarms').appendChild(d);
+  beep();
+}
+
+/* ---------- üst şerit ---------- */
+function renderTop(){
+  if(!S.stocks.length){$('chips').innerHTML='<div class="chip">Henüz stok yok</div>';return}
+  $('chips').innerHTML=S.stocks.map(s=>{
+    const r=rem(s);
+    return `<div class="chip ${isLow(s)?'low':''}">${label(s)}<br><b>${fmt(r)}</b> çubuk<small>${fmt(r*bw(s))} kg${isLow(s)?' · AZ KALDI':''}</small></div>`;
+  }).join('');
+}
+
+/* ---------- stok formu ---------- */
+let editId=null,manualW=false,last='qty';
+function recalcForm(){
+  const d=num($('fD').value),l=num($('fL').value);
+  if(!manualW){const w=d&&l?calcW(d,l):0;$('fW').value=w?rnd(w,3):''}
+  const w=num($('fW').value);
+  if(last==='qty'){const q=num($('fQty').value);$('fKg').value=(q&&w)?rnd(q*w,2):''}
+  else{const kg=num($('fKg').value);$('fQty').value=(kg&&w)?rnd(kg/w,2):''}
+}
+$('fD').oninput=$('fL').oninput=recalcForm;
+$('fW').oninput=()=>{manualW=$('fW').value.trim()!=='';recalcForm()};
+$('fQty').oninput=()=>{last='qty';recalcForm()};
+$('fKg').oninput=()=>{last='kg';recalcForm()};
+
+function resetForm(){
+  editId=null;manualW=false;last='qty';
+  ['fD','fL','fW','fQty','fKg','fWarn'].forEach(i=>$(i).value='');
+  $('fDate').value=today();
+  $('fTitle').textContent='Yeni stok girişi';
+  $('fSave').textContent='Stoğu kaydet';
+  $('fCancel').classList.add('hide');
+}
+$('fCancel').onclick=resetForm;
+$('fSave').onclick=()=>{
+  const d=num($('fD').value),l=num($('fL').value);
+  if(d<=0||l<=0){alert('Çap ve boy gir.');return}
+  const wTxt=$('fW').value.trim();
+  const wManual=manualW&&num(wTxt)>0;
+  const w=wManual?num(wTxt):calcW(d,l);
+  let qty;
+  if(last==='kg'&&num($('fKg').value)>0)qty=num($('fKg').value)/w;
+  else qty=num($('fQty').value);
+  if(qty<0){alert('Adet negatif olamaz.');return}
+  const warn=$('fWarn').value.trim()===''?null:num($('fWarn').value);
+  const rec={d,l,w:wManual?w:0,wManual,qty,date:$('fDate').value||today(),warn};
+  if(editId){Object.assign(stockById(editId),rec)}
+  else S.stocks.push(Object.assign({id:uid()},rec));
+  save();resetForm();renderAll();
 };
 
-function toast(msg){
-  els.toast.textContent = msg;
-  els.toast.classList.add("show");
-  clearTimeout(toast._t);
-  toast._t = setTimeout(()=>els.toast.classList.remove("show"), 1800);
+/* ---------- stok tablosu ---------- */
+function renderStocks(){
+  const b=$('stockBody');
+  if(!S.stocks.length){b.innerHTML='<tr><td colspan="9" class="empty">Henüz stok eklenmedi.</td></tr>';return}
+  b.innerHTML=S.stocks.map(s=>{
+    const r=rem(s),u=used(s),w=bw(s);
+    return `<tr class="${isLow(s)?'low':''}">
+      <td><b>${label(s)}</b>${isLow(s)?'<span class="badge">AZ</span>':''}</td>
+      <td class="num">${fmt(w,3)}</td>
+      <td>${trDate(s.date)}</td>
+      <td class="num">${fmt(s.qty)}</td>
+      <td class="num">${fmt(u)}</td>
+      <td class="num remc">${fmt(r)}</td>
+      <td class="num remc">${fmt(r*w)}</td>
+      <td class="num">${fmt(limit(s))}${s.warn!=null?'*':''}</td>
+      <td>
+        <button class="btn sm" data-act="arr" data-id="${s.id}">+ Geliş</button>
+        <button class="btn sm sec" data-act="edit" data-id="${s.id}">Düzenle</button>
+        <button class="btn sm del" data-act="del" data-id="${s.id}">Sil</button>
+      </td></tr>`;
+  }).join('');
 }
-
-/* ============ API KEY (localStorage, device-only) ============ */
-const API_KEY_LS = "kutuphanem_api_key";
-function getApiKey(){ try{ return localStorage.getItem(API_KEY_LS) || ""; }catch(e){ return ""; } }
-function setApiKey(v){ try{ if(v) localStorage.setItem(API_KEY_LS, v); else localStorage.removeItem(API_KEY_LS); }catch(e){} }
-
-/* ---- shared Gemini API caller (used by all three AI features) ---- */
-const AI_MODEL = "gemini-3.5-flash";
-function geminiEndpoint(){ return `https://generativelanguage.googleapis.com/v1beta/models/${AI_MODEL}:generateContent`; }
-async function callGemini(promptText, base64Image){
-  const key = getApiKey();
-  if(!key) throw new Error("NO_KEY");
-  const parts = [];
-  if(base64Image) parts.push({ inline_data: { mime_type:"image/jpeg", data: base64Image } });
-  parts.push({ text: promptText });
-  const resp = await fetch(geminiEndpoint(), {
-    method: "POST",
-    headers: { "content-type":"application/json", "x-goog-api-key": key },
-    body: JSON.stringify({ contents:[{ parts }] })
-  });
-  if(!resp.ok){
-    if(resp.status === 400 || resp.status === 403) throw new Error("API anahtarı geçersiz görünüyor");
-    if(resp.status === 429) throw new Error("Çok fazla istek, biraz sonra tekrar dene");
-    throw new Error("İstek başarısız oldu (" + resp.status + ")");
-  }
-  const data = await resp.json();
-  const cand = (data.candidates && data.candidates[0]) || null;
-  const text = cand && cand.content && cand.content.parts ? cand.content.parts.map(p=>p.text||"").join("") : "";
-  return text.trim();
-}
-function stripJsonFence(text){ return text.replace(/^```json\s*|^```\s*|```\s*$/g, "").trim(); }
-
-$("#btnSettings").addEventListener("click", ()=>{
-  els.apiKeyInput.value = getApiKey();
-  els.apiKeyInput.type = "password";
-  els.settingsMask.classList.add("active");
-});
-$("#settingsMask").addEventListener("click",(e)=>{ if(e.target===els.settingsMask) els.settingsMask.classList.remove("active"); });
-$("#settingsCancel").addEventListener("click", ()=> els.settingsMask.classList.remove("active"));
-$("#settingsSave").addEventListener("click", ()=>{
-  setApiKey(els.apiKeyInput.value.trim());
-  els.settingsMask.classList.remove("active");
-  toast("Ayarlar kaydedildi");
-});
-$("#btnToggleKey").addEventListener("click", ()=>{
-  els.apiKeyInput.type = els.apiKeyInput.type === "password" ? "text" : "password";
-});
-
-/* ============ VIEW SWITCH ============ */
-function showView(name){
-  els.viewLibrary.style.display = name==="library" ? "flex" : "none";
-  els.viewReader.classList.toggle("active", name==="reader");
-  els.viewScan.classList.toggle("active", name==="scan");
-  els.viewCrop.classList.toggle("active", name==="crop");
-  if(name!=="scan") stopCamera();
-}
-
-/* ============ LOAD & RENDER LIBRARY ============ */
-async function loadLibrary(){
-  books = await idbGetAll("books");
-  books.sort((a,b)=>b.createdAt-a.createdAt);
-  pagesByBook = {};
-  for(const b of books){
-    const pages = await idbGetAllByIndex("pages","bookId",b.id);
-    pages.sort((a,b2)=>a.order-b2.order);
-    pagesByBook[b.id] = pages;
-    try{ highlightsByBook[b.id] = await idbGetAllByIndex("highlights","bookId",b.id); }
-    catch(e){ highlightsByBook[b.id] = highlightsByBook[b.id] || []; }
-  }
-  renderLibrary();
-}
-
-let libraryCoverUrls = [];
-function renderLibrary(){
-  libraryCoverUrls.forEach(u=>URL.revokeObjectURL(u));
-  libraryCoverUrls = [];
-  els.grid.innerHTML = "";
-  if(books.length === 0){
-    els.shelfCount.textContent = "Kütüphane boş";
-    els.grid.innerHTML = "";
-    const empty = document.createElement("div");
-    empty.className = "empty-state";
-    empty.style.gridColumn = "1/-1";
-    empty.innerHTML = `
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M3 5.5C3 4.7 3.7 4 5 4c3 0 5.5 1 7 2.5V19C10.5 17.5 8 16.5 5 16.5c-1.3 0-2 .7-2 1.5V5.5Z"/><path d="M21 5.5c0-.8-.7-1.5-2-1.5-3 0-5.5 1-7 2.5V19c1.5-1.5 4-2.5 7-2.5 1.3 0 2 .7 2 1.5V5.5Z"/></svg>
-      <h2>Raf henüz boş</h2>
-      <p>İlk kitabını tara: sayfaları fotoğrafla, kırp, kütüphanene ekle. Her şey telefonunda kalır.</p>
-      <button class="cta-btn" id="btnEmptyScan">İlk kitabı tara</button>`;
-    els.grid.parentElement.appendChild(empty);
-    empty.querySelector("#btnEmptyScan").addEventListener("click", startNewBookFlow);
-    return;
-  }
-  const stale = els.grid.parentElement.querySelector(".empty-state");
-  if(stale) stale.remove();
-  els.shelfCount.textContent = books.length + (books.length===1 ? " kitap" : " kitap");
-  for(const b of books){
-    const pages = pagesByBook[b.id] || [];
-    const card = document.createElement("div");
-    card.className = "book-card";
-    card.setAttribute("role", "button");
-    card.tabIndex = 0;
-    const coverUrl = pages[0] ? URL.createObjectURL(pages[0].blob) : null;
-    if(coverUrl) libraryCoverUrls.push(coverUrl);
-    card.innerHTML = `
-      <div class="spine">
-        <div class="spine-edge"></div>
-        ${coverUrl ? `<img src="${coverUrl}" alt="">` : `<div class="no-cover">${(b.title||"?").charAt(0).toUpperCase()}</div>`}
-        <button class="edit-fab" aria-label="Kitabı düzenle">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-        </button>
-      </div>
-      <div class="book-title">${escapeHtml(b.title || "Adsız kitap")}</div>
-      <div class="book-meta">${pages.length} sayfa</div>`;
-    card.addEventListener("click", ()=>openBook(b.id, "read"));
-    card.querySelector(".edit-fab").addEventListener("click", (e)=>{
-      e.stopPropagation();
-      openBook(b.id, "edit");
-    });
-    els.grid.appendChild(card);
-  }
-}
-function escapeHtml(s){ const d=document.createElement("div"); d.textContent=s; return d.innerHTML; }
-
-/* ============ READER ============ */
-let readerMode = "read"; // "read" (minimal, default) | "edit" (full controls)
-function applyReaderModeUi(){
-  els.viewReader.classList.toggle("mode-edit", readerMode === "edit");
-  els.viewReader.classList.toggle("mode-read", readerMode === "read");
-}
-$("#btnReaderDone").addEventListener("click", ()=>{
-  readerMode = "read";
-  applyReaderModeUi();
-});
-
-async function openBook(bookId, mode, targetPageId){
-  currentBookId = bookId;
-  readerMode = mode === "edit" ? "edit" : "read";
-  applyReaderModeUi();
-  const book = books.find(b=>b.id===bookId);
-  els.readerTitle.textContent = book ? book.title : "Kitap";
-  showView("reader");
-  if(!highlightsByBook[bookId]){
-    try{ highlightsByBook[bookId] = await idbGetAllByIndex("highlights","bookId",bookId); }
-    catch(e){ highlightsByBook[bookId] = []; }
-  }
-  const pages = pagesByBook[bookId] || [];
-  if(targetPageId){
-    const idx = pages.findIndex(p=>p.id===targetPageId);
-    currentIndex = idx >= 0 ? idx : 0;
-  } else {
-    currentIndex = 0;
-  }
-  renderPage();
-}
-
-function currentPages(){ return pagesByBook[currentBookId] || []; }
-
-let lastBaseUrl = null;
-function setBaseLeaf(url){
-  if(lastBaseUrl) URL.revokeObjectURL(lastBaseUrl);
-  lastBaseUrl = url;
-}
-
-/* ---- zoom/pan state for the resting (base) page ---- */
-let readerScale = 1, readerFit = 1, readerNatW = 0, readerNatH = 0;
-let readerPos = {left:0, top:0};
-const readerImgEl = ()=> document.getElementById("readerImg");
-const readerMediaEl = ()=> document.getElementById("readerMedia");
-const leafEmptyEl = ()=> document.getElementById("leafEmpty");
-
-function applyReaderTransform(){
-  readerMediaEl().style.transform = `translate(${readerPos.left}px, ${readerPos.top}px) scale(${readerFit*readerScale})`;
-}
-function clampReaderPos(){
-  const vpW = els.baseLeaf.clientWidth, vpH = els.baseLeaf.clientHeight;
-  const w = readerNatW*readerFit*readerScale, h = readerNatH*readerFit*readerScale;
-  readerPos.left = (w <= vpW) ? (vpW-w)/2 : Math.min(0, Math.max(vpW-w, readerPos.left));
-  readerPos.top  = (h <= vpH) ? (vpH-h)/2 : Math.min(0, Math.max(vpH-h, readerPos.top));
-}
-function resetReaderView(){
-  const vpW = els.baseLeaf.clientWidth, vpH = els.baseLeaf.clientHeight;
-  if(!readerNatW || !readerNatH || !vpW || !vpH) return;
-  readerFit = Math.min(vpW/readerNatW, vpH/readerNatH);
-  readerScale = 1;
-  const w = readerNatW*readerFit, h = readerNatH*readerFit;
-  readerPos.left = (vpW-w)/2; readerPos.top = (vpH-h)/2;
-  applyReaderTransform();
-}
-function renderHighlightOverlays(pageOrder){
-  const layer = document.getElementById("highlightLayer");
-  if(!layer) return;
-  layer.innerHTML = "";
-  const pages = currentPages();
-  const page = pages[pageOrder];
-  if(!page) return;
-  const list = (highlightsByBook[currentBookId]||[]).filter(h=>h.pageId===page.id);
-  for(const h of list){
-    const d = document.createElement("div");
-    d.className = "hl-rect";
-    d.style.left = (h.rx*100)+"%"; d.style.top = (h.ry*100)+"%";
-    d.style.width = (h.rw*100)+"%"; d.style.height = (h.rh*100)+"%";
-    layer.appendChild(d);
-  }
-}
-function mountBaseMedia(url, pageOrder){
-  setBaseLeaf(url);
-  leafEmptyEl().style.display = "none";
-  readerMediaEl().style.display = "block";
-  const img = readerImgEl();
-  img.onload = ()=>{
-    readerNatW = img.naturalWidth; readerNatH = img.naturalHeight;
-    readerMediaEl().style.width = readerNatW+"px";
-    readerMediaEl().style.height = readerNatH+"px";
-    resetReaderView();
-    renderHighlightOverlays(pageOrder);
-  };
-  img.src = url;
-}
-
-function renderPage(){
-  const pages = currentPages();
-  const book = books.find(b=>b.id===currentBookId);
-  els.readerTitle.textContent = book ? book.title : "";
-  if(pages.length === 0){
-    readerMediaEl().style.display = "none";
-    leafEmptyEl().style.display = "flex";
-    leafEmptyEl().textContent = "Bu kitapta henüz sayfa yok";
-    els.readerPage.textContent = "0 / 0";
-    return;
-  }
-  currentIndex = Math.max(0, Math.min(currentIndex, pages.length-1));
-  const url = URL.createObjectURL(pages[currentIndex].blob);
-  mountBaseMedia(url, currentIndex);
-  els.readerPage.textContent = (currentIndex+1) + " / " + pages.length;
-}
-
-function flipTo(direction){
-  if(readerScale > 1.02 || markMode) return;
-  const pages = currentPages();
-  if(pages.length === 0) return;
-  const targetIndex = currentIndex + direction;
-  if(targetIndex < 0 || targetIndex >= pages.length) return;
-  if(document.querySelector(".flip")) return; // animation in progress
-
-  const flip = document.createElement("div");
-  flip.className = "flip";
-  const stage = els.bookStage;
-
-  if(direction === 1){
-    const curUrl = URL.createObjectURL(pages[currentIndex].blob);
-    const nextUrl = URL.createObjectURL(pages[targetIndex].blob);
-    flip.innerHTML = `
-      <div class="face front"><img src="${curUrl}"></div>
-      <div class="face back"><img src="${nextUrl}"></div>
-      <div class="shade"></div>`;
-    flip.style.transform = "rotateY(0deg)";
-    stage.appendChild(flip);
-    mountBaseMedia(nextUrl, targetIndex); // ready underneath
-    requestAnimationFrame(()=>{
-      flip.style.transition = "transform 480ms cubic-bezier(.4,.1,.2,1)";
-      flip.querySelector(".shade").style.transition = "opacity 480ms";
-      flip.style.transform = "rotateY(-180deg)";
-      flip.querySelector(".shade").style.opacity = "0.9";
-    });
-    flip.addEventListener("transitionend", function done(e){
-      if(e.propertyName !== "transform") return;
-      flip.removeEventListener("transitionend", done);
-      flip.remove();
-      URL.revokeObjectURL(curUrl);
-      currentIndex = targetIndex;
-      els.readerPage.textContent = (currentIndex+1) + " / " + pages.length;
-    });
-  } else {
-    const prevUrl = URL.createObjectURL(pages[targetIndex].blob);
-    const curUrl = URL.createObjectURL(pages[currentIndex].blob);
-    flip.innerHTML = `
-      <div class="face front"><img src="${prevUrl}"></div>
-      <div class="face back"><img src="${curUrl}"></div>
-      <div class="shade"></div>`;
-    flip.style.transform = "rotateY(-180deg)";
-    flip.querySelector(".shade").style.opacity = "0.9";
-    stage.appendChild(flip);
-    requestAnimationFrame(()=>{
-      flip.style.transition = "transform 480ms cubic-bezier(.4,.1,.2,1)";
-      flip.querySelector(".shade").style.transition = "opacity 480ms";
-      flip.style.transform = "rotateY(0deg)";
-      flip.querySelector(".shade").style.opacity = "0";
-    });
-    flip.addEventListener("transitionend", function done(e){
-      if(e.propertyName !== "transform") return;
-      flip.removeEventListener("transitionend", done);
-      flip.remove();
-      currentIndex = targetIndex;
-      mountBaseMedia(prevUrl, targetIndex);
-      URL.revokeObjectURL(curUrl);
-      els.readerPage.textContent = (currentIndex+1) + " / " + pages.length;
-    });
-  }
-}
-
-$("#btnBackLib").addEventListener("click", ()=>{ showView("library"); loadLibrary(); });
-$("#floatBackLib").addEventListener("click", ()=>{ showView("library"); loadLibrary(); });
-
-/* ---- unified pointer gestures: pinch-zoom, pan, swipe-to-flip, double-tap-zoom ---- */
-const readerPointers = new Map();
-let readerPanStart = null, readerPinchStartDist = null, readerPinchStartScale = 1, readerPinchStartPos = null, readerPinchFocal = null;
-let swipeStartX = null, swipeStartY = null, swipeStartTime = 0;
-let lastTapTime = 0, lastTapPos = null;
-
-function toggleDoubleTapZoom(clientX, clientY){
-  const leafRect = els.baseLeaf.getBoundingClientRect();
-  const focal = {x: clientX-leafRect.left, y: clientY-leafRect.top};
-  if(readerScale > 1.02){
-    resetReaderView();
-  } else {
-    const newScale = 2.4;
-    const oldW = readerNatW*readerFit, oldH = readerNatH*readerFit;
-    const relX = (focal.x - readerPos.left)/oldW, relY = (focal.y - readerPos.top)/oldH;
-    const newW = readerNatW*readerFit*newScale, newH = readerNatH*readerFit*newScale;
-    readerPos.left = focal.x - relX*newW;
-    readerPos.top = focal.y - relY*newH;
-    readerScale = newScale;
-    clampReaderPos();
-    applyReaderTransform();
-  }
-}
-
-els.bookStage.addEventListener("pointerdown",(e)=>{
-  if(markMode || document.querySelector(".flip")) return;
-  els.bookStage.setPointerCapture(e.pointerId);
-  readerPointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
-  if(readerPointers.size === 1){
-    swipeStartX = e.clientX; swipeStartY = e.clientY; swipeStartTime = Date.now();
-    if(readerScale > 1.02){
-      readerPanStart = {x:e.clientX, y:e.clientY, left:readerPos.left, top:readerPos.top};
-    }
-  } else if(readerPointers.size === 2){
-    swipeStartX = null;
-    const pts = [...readerPointers.values()];
-    readerPinchStartDist = Math.hypot(pts[0].x-pts[1].x, pts[0].y-pts[1].y);
-    readerPinchStartScale = readerScale;
-    readerPinchStartPos = {...readerPos};
-    const leafRect = els.baseLeaf.getBoundingClientRect();
-    readerPinchFocal = {x:(pts[0].x+pts[1].x)/2 - leafRect.left, y:(pts[0].y+pts[1].y)/2 - leafRect.top};
-  }
-});
-els.bookStage.addEventListener("pointermove",(e)=>{
-  if(markMode || !readerPointers.has(e.pointerId)) return;
-  readerPointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
-  if(readerPointers.size === 1 && readerPanStart){
-    readerPos.left = readerPanStart.left + (e.clientX - readerPanStart.x);
-    readerPos.top = readerPanStart.top + (e.clientY - readerPanStart.y);
-    clampReaderPos();
-    applyReaderTransform();
-  } else if(readerPointers.size === 2 && readerPinchStartDist){
-    const pts = [...readerPointers.values()];
-    const d = Math.hypot(pts[0].x-pts[1].x, pts[0].y-pts[1].y);
-    const newScale = Math.max(1, Math.min(4, readerPinchStartScale*(d/readerPinchStartDist)));
-    const oldW = readerNatW*readerFit*readerPinchStartScale, oldH = readerNatH*readerFit*readerPinchStartScale;
-    const relX = (readerPinchFocal.x-readerPinchStartPos.left)/oldW, relY = (readerPinchFocal.y-readerPinchStartPos.top)/oldH;
-    const newW = readerNatW*readerFit*newScale, newH = readerNatH*readerFit*newScale;
-    readerPos.left = readerPinchFocal.x - relX*newW;
-    readerPos.top = readerPinchFocal.y - relY*newH;
-    readerScale = newScale;
-    clampReaderPos();
-    applyReaderTransform();
-  }
-});
-function endReaderPointer(e){
-  if(markMode) return;
-  const wasSingle = readerPointers.size === 1;
-  readerPointers.delete(e.pointerId);
-  readerPinchStartDist = null;
-  if(readerPointers.size === 1){
-    const [p] = readerPointers.values();
-    readerPanStart = {x:p.x, y:p.y, left:readerPos.left, top:readerPos.top};
-  } else {
-    readerPanStart = null;
-  }
-  if(wasSingle && readerPointers.size === 0 && swipeStartX !== null){
-    const dx = e.clientX - swipeStartX, dy = e.clientY - swipeStartY;
-    const dt = Date.now() - swipeStartTime;
-    if(readerScale <= 1.02 && Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) && dt < 600){
-      flipTo(dx < 0 ? 1 : -1);
-    } else if(Math.abs(dx) < 12 && Math.abs(dy) < 12){
-      const now = Date.now();
-      const isDouble = lastTapPos && (now-lastTapTime) < 320 && Math.hypot(e.clientX-lastTapPos.x, e.clientY-lastTapPos.y) < 40;
-      lastTapTime = now; lastTapPos = {x:e.clientX, y:e.clientY};
-      if(isDouble){
-        toggleDoubleTapZoom(e.clientX, e.clientY);
-      } else if(readerScale <= 1.02){
-        const stageRect = els.bookStage.getBoundingClientRect();
-        const relX = (e.clientX - stageRect.left)/stageRect.width;
-        if(relX < 0.28) flipTo(-1);
-        else if(relX > 0.72) flipTo(1);
-      }
+$('stockBody').onclick=e=>{
+  const b=e.target.closest('button');if(!b)return;
+  const s=stockById(b.dataset.id);if(!s)return;
+  if(b.dataset.act==='arr'){
+    const n=num(prompt(label(s)+' için gelen çubuk adedi:'));
+    if(n>0){s.qty+=n;s.date=today();save();renderAll()}
+  }else if(b.dataset.act==='edit'){
+    editId=s.id;manualW=!!s.wManual;last='qty';
+    $('fD').value=rnd(s.d,2);$('fL').value=rnd(s.l,2);
+    $('fW').value=manualW?rnd(s.w,3):'';
+    $('fQty').value=rnd(s.qty,2);$('fDate').value=s.date||today();
+    $('fWarn').value=s.warn!=null?rnd(s.warn,2):'';
+    recalcForm();
+    $('fTitle').textContent='Stok düzenle: '+label(s);
+    $('fSave').textContent='Değişiklikleri kaydet';
+    $('fCancel').classList.remove('hide');
+    window.scrollTo({top:0,behavior:'smooth'});
+  }else if(b.dataset.act==='del'){
+    const n=S.products.filter(p=>p.stockId===s.id).length;
+    if(confirm(label(s)+' stoğu silinsin mi?'+(n?'\n'+n+' ürün kodu bu stoğa bağlı, bağlantıları kopacak.':''))){
+      S.products.forEach(p=>{if(p.stockId===s.id)p.stockId=''});
+      S.stocks=S.stocks.filter(x=>x.id!==s.id);
+      save();renderAll();
     }
   }
-  swipeStartX = null;
-}
-els.bookStage.addEventListener("pointerup", endReaderPointer);
-els.bookStage.addEventListener("pointercancel", endReaderPointer);
+};
 
-/* ============ HIGHLIGHTS / FAVORITES ============ */
-let markMode = false, markDragStart = null, markRectEl = null, pendingMarkRect = null;
+/* ---------- ürün kodları ---------- */
+const prodById=id=>S.products.find(p=>p.id===id);
+function stockOptions(sel){
+  return '<option value="">— seç —</option>'+S.stocks.map(s=>`<option value="${s.id}" ${s.id===sel?'selected':''}>${label(s)}</option>`).join('');
+}
+function renderProducts(){
+  const sel=$('pStock'),cur=sel.value;
+  sel.innerHTML=stockOptions(cur);
+  const b=$('prodBody');
+  if(!S.products.length){b.innerHTML='<tr><td colspan="6" class="empty">Henüz ürün kodu eklenmedi.</td></tr>';return}
+  b.innerHTML=S.products.map(p=>`<tr data-id="${p.id}">
+      <td><b>${esc(p.code)}</b> <button class="btn sm del" data-act="pdel" title="Sil">✕</button></td>
+      <td><select data-f="stock">${stockOptions(p.stockId)}</select></td>
+      <td><input data-f="raw" inputmode="decimal" value="${p.raw?rnd(p.raw,2):''}" style="width:90px"></td>
+      <td class="num" data-c="parts"></td>
+      <td class="num" data-c="made"></td>
+      <td class="num" data-c="use"></td>
+    </tr>`).join('');
+  document.querySelectorAll('#prodBody tr[data-id]').forEach(updateProdRow);
+}
+function updateProdRow(tr){
+  const p=prodById(tr.dataset.id);if(!p)return;
+  const s=stockById(p.stockId),pp=partsPer(s,p);
+  tr.querySelector('[data-c=parts]').innerHTML=!s?'<span class="warnTxt">Stok seçilmedi</span>':pp<=0?'<span class="warnTxt">⚠ boy uygun değil</span>':fmt(pp)+' adet';
+  tr.querySelector('[data-c=made]').textContent=fmt(madeP(p))+' adet';
+  const ub=usedBarsP(p);
+  tr.querySelector('[data-c=use]').innerHTML=s?`${fmt(ub)} çubuk · ${fmt(ub*bw(s))} kg`:'—';
+}
+$('prodBody').addEventListener('input',e=>{
+  const tr=e.target.closest('tr[data-id]');if(!tr||e.target.dataset.f!=='raw')return;
+  prodById(tr.dataset.id).raw=num(e.target.value);afterChange();
+});
+$('prodBody').addEventListener('change',e=>{
+  const tr=e.target.closest('tr[data-id]');if(!tr||e.target.dataset.f!=='stock')return;
+  prodById(tr.dataset.id).stockId=e.target.value;afterChange();
+});
+$('prodBody').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  const p=prodById(b.closest('tr[data-id]').dataset.id);if(!p)return;
+  const n=S.entries.filter(x=>prodByCode(x.code)===p).length;
+  if(confirm(p.code+' ürün kodu silinsin mi?'+(n?'\n'+n+' üretim kaydı tabloda kalır ama kod tanımsız olduğu için stoktan düşmez.':''))){
+    S.products=S.products.filter(x=>x!==p);
+    save();renderAll();initAlarmed();
+  }
+});
+$('pAdd').onclick=()=>{
+  const code=$('pCode').value.trim(),sid=$('pStock').value,raw=num($('pRaw').value);
+  if(!code){alert('Ürün kodu gir.');return}
+  if(prodByCode(code)){alert('Bu ürün kodu zaten var.');return}
+  if(!sid){alert('Stok seç.');return}
+  if(raw<=0){alert('Ham stok boyunu gir.');return}
+  const s=stockById(sid);
+  if(raw>s.l&&!confirm('Ham boy çubuk boyundan uzun, yine de eklensin mi?'))return;
+  S.products.push({id:uid(),code,stockId:sid,raw});
+  $('pCode').value='';$('pRaw').value='';
+  save();renderAll();
+};
 
-function enterMarkMode(){
-  if(currentPages().length === 0){ toast("Önce bir sayfa ekle"); return; }
-  if(readerScale > 1.02) resetReaderView();
-  markMode = true;
-  document.querySelectorAll(".mark-toggle-btn").forEach(b=>b.classList.add("on"));
-  els.markOverlay.classList.add("active");
+/* ---------- ürün kodu açılır listesi ---------- */
+const menu=$('codeMenu');
+let menuInp=null,menuIdx=-1,menuAll=false;
+function menuList(){
+  const q=norm(menuInp.value);
+  return(menuAll||!q)?S.products:S.products.filter(p=>norm(p.code).includes(q));
 }
-$("#btnMarkToggle").addEventListener("click", enterMarkMode);
-$("#floatMarkToggle").addEventListener("click", enterMarkMode);
-function exitMarkMode(){
-  markMode = false;
-  document.querySelectorAll(".mark-toggle-btn").forEach(b=>b.classList.remove("on"));
-  els.markOverlay.classList.remove("active");
-  if(markRectEl){ markRectEl.remove(); markRectEl = null; }
-  markDragStart = null;
+function renderMenu(){
+  const list=menuList(),q=norm(menuInp.value);
+  if(!S.products.length){menu.innerHTML='<div class="mnone">Önce "Ürün Kodları" sekmesinden kod ekle.</div>';return}
+  if(!list.length){menu.innerHTML='<div class="mnone">Listede yok</div>';return}
+  menu.innerHTML=list.map((p,i)=>{
+    const s=stockById(p.stockId);
+    return `<div class="mi${i===menuIdx?' act':''}${norm(p.code)===q?' ex':''}" data-code="${esc(p.code)}"><b>${esc(p.code)}</b><span>${s?label(s)+' · '+fmt(p.raw)+' mm':'stok yok'}</span></div>`;
+  }).join('');
 }
-$("#btnMarkCancel").addEventListener("click", exitMarkMode);
-els.markOverlay.addEventListener("pointerdown",(e)=>{
-  if(e.target.closest("#btnMarkCancel")) return;
+function placeMenu(){
+  if(!menuInp)return;
+  const r=menuInp.getBoundingClientRect();
+  menu.style.display='block';
+  menu.style.minWidth=Math.max(r.width,220)+'px';
+  menu.style.left=Math.max(4,Math.min(r.left,innerWidth-menu.offsetWidth-4))+'px';
+  const below=innerHeight-r.bottom-8;
+  if(below<170&&r.top>below){
+    menu.style.maxHeight=Math.min(260,r.top-8)+'px';
+    menu.style.top=(r.top-menu.offsetHeight)+'px';
+  }else{
+    menu.style.maxHeight=Math.min(260,below)+'px';
+    menu.style.top=r.bottom+'px';
+  }
+}
+function openMenu(inp,all){
+  menuInp=inp;menuAll=!!all;menuIdx=-1;
+  if(menuAll){const i=menuList().findIndex(p=>norm(p.code)===norm(inp.value));menuIdx=i}
+  renderMenu();placeMenu();
+  const a=menu.querySelector('.act');if(a)a.scrollIntoView({block:'nearest'});
+}
+function closeMenu(){menu.style.display='none';menuInp=null;menuIdx=-1}
+function moveMenu(dir){
+  const list=menuList();if(!list.length)return;
+  menuIdx=menuIdx<0?(dir>0?0:list.length-1):(menuIdx+dir+list.length)%list.length;
+  renderMenu();
+  const a=menu.querySelector('.act');if(a)a.scrollIntoView({block:'nearest'});
+}
+function pickCode(code){
+  const inp=menuInp;if(!inp)return;
+  inp.value=code;
+  applyField(inp,true);
+  closeMenu();
+  const q=inp.closest('tr').querySelector('[data-f=qty]');
+  q.focus();q.select();
+}
+menu.addEventListener('mousedown',e=>{
   e.preventDefault();
-  els.markOverlay.setPointerCapture(e.pointerId);
-  const rect = els.markOverlay.getBoundingClientRect();
-  markDragStart = {x:e.clientX-rect.left, y:e.clientY-rect.top, pointerId:e.pointerId};
-  markRectEl = document.createElement("div");
-  markRectEl.className = "mark-rect";
-  els.markOverlay.appendChild(markRectEl);
+  const it=e.target.closest('.mi');
+  if(it)pickCode(it.dataset.code);
 });
-els.markOverlay.addEventListener("pointermove",(e)=>{
-  if(!markDragStart || e.pointerId !== markDragStart.pointerId || !markRectEl) return;
-  const rect = els.markOverlay.getBoundingClientRect();
-  const x = e.clientX-rect.left, y = e.clientY-rect.top;
-  const left = Math.min(x, markDragStart.x), top = Math.min(y, markDragStart.y);
-  const w = Math.abs(x-markDragStart.x), h = Math.abs(y-markDragStart.y);
-  markRectEl.style.left = left+"px"; markRectEl.style.top = top+"px";
-  markRectEl.style.width = w+"px"; markRectEl.style.height = h+"px";
-});
-els.markOverlay.addEventListener("pointerup",(e)=>{
-  if(!markDragStart || e.pointerId !== markDragStart.pointerId) return;
-  const w = markRectEl ? parseFloat(markRectEl.style.width)||0 : 0;
-  const h = markRectEl ? parseFloat(markRectEl.style.height)||0 : 0;
-  if(w < 24 || h < 24){
-    if(markRectEl){ markRectEl.remove(); markRectEl = null; }
-    markDragStart = null;
-    toast("Alan çok küçük, tekrar dene");
-    return;
-  }
-  const left = parseFloat(markRectEl.style.left), top = parseFloat(markRectEl.style.top);
-  markDragStart = null;
-  // compute image-relative fraction now, while geometry is still on screen —
-  // reused by both the OCR button and the save handler below.
-  const mediaRect = readerMediaEl().getBoundingClientRect();
-  const overlayRect = els.markOverlay.getBoundingClientRect();
-  const absLeft = overlayRect.left + left, absTop = overlayRect.top + top;
-  let rx = (absLeft - mediaRect.left) / mediaRect.width;
-  let ry = (absTop - mediaRect.top) / mediaRect.height;
-  let rw = w / mediaRect.width;
-  let rh = h / mediaRect.height;
-  rx = Math.max(0, Math.min(1, rx)); ry = Math.max(0, Math.min(1, ry));
-  rw = Math.max(0.01, Math.min(1-rx, rw)); rh = Math.max(0.01, Math.min(1-ry, rh));
-  pendingMarkRect = {rx, ry, rw, rh};
-  els.markNoteInput.value = "";
-  els.markNoteMask.classList.add("active");
-});
-$("#markNoteCancel").addEventListener("click", ()=>{ els.markNoteMask.classList.remove("active"); exitMarkMode(); });
-$("#markNoteMask").addEventListener("click",(e)=>{ if(e.target===els.markNoteMask){ els.markNoteMask.classList.remove("active"); exitMarkMode(); } });
+window.addEventListener('scroll',()=>{if(menuInp)placeMenu()},true);
+window.addEventListener('resize',()=>{if(menuInp)placeMenu()});
 
-/* ---- AI: read the marked region's text (OCR-style transcription) ---- */
-async function base64FromBlobRegion(blob, rx, ry, rw, rh, maxDim){
-  const bmp = await createImageBitmap(blob);
-  const sx = rx*bmp.width, sy = ry*bmp.height, sw = rw*bmp.width, sh = rh*bmp.height;
-  const scale = Math.min(1, maxDim/Math.max(sw,sh));
-  const c = document.createElement("canvas");
-  c.width = Math.max(1, Math.round(sw*scale)); c.height = Math.max(1, Math.round(sh*scale));
-  c.getContext("2d").drawImage(bmp, sx, sy, sw, sh, 0, 0, c.width, c.height);
-  try{ bmp.close(); }catch(e){}
-  return c.toDataURL("image/jpeg", 0.85).split(",")[1];
+/* ---------- ürün takip: Excel tarzı ızgara ---------- */
+const FIELDS=['target','code','qty','date','shift','op','note'];
+const body=$('entBody');
+
+function spareCount(){let t=0;for(let i=S.entries.length-1;i>=0&&isBlank(S.entries[i]);i--)t++;return t}
+function ensureSpare(n){let t=spareCount();while(t<n){S.entries.push(newEntry());t++}}
+
+function entryUseText(e){
+  if(!e.code&&!e.qty)return '';
+  const p=prodByCode(e.code);
+  if(!p)return e.code?'<span class="warnTxt">Kod tanımlı değil</span>':'';
+  const s=stockById(p.stockId);
+  if(!s)return '<span class="warnTxt">Stok seçilmedi</span>';
+  const pp=partsPer(s,p);
+  if(pp<=0)return '<span class="warnTxt">⚠ boy uygun değil</span>';
+  const ub=(e.qty||0)/pp;
+  return `<b>${fmt(ub)}</b> çubuk · ${fmt(ub*bw(s))} kg`;
 }
-async function callAiTextRead(b64){
-  return callGemini("Transcribe exactly the text visible in this image crop. Respond with ONLY the transcribed text, no preamble, no quotes, no commentary. If there is no readable text, respond with an empty string.", b64);
+function rowHtml(e,i,info){
+  const inf=info?info.rows[i]:null;
+  const bad=e.code&&!prodByCode(e.code)?'bad':'';
+  return `<tr data-id="${e.id}">
+    <td class="tg ${tgClass(e,inf)}"><input data-f="target" inputmode="numeric" autocomplete="off" value="${tgText(inf)}" title="${esc(tgTitle(inf))}"></td>
+    <td class="rn">${i+1}</td>
+    <td class="cd"><input data-f="code" value="${esc(e.code)}" autocomplete="off" class="${bad}"></td>
+    <td><input data-f="qty" inputmode="numeric" value="${e.qty||''}"></td>
+    <td class="dt"><input data-f="date" inputmode="numeric" placeholder="gg.aa.yyyy" value="${dispDate(e.date)}"><button class="calbtn" data-act="cal" tabindex="-1" title="Takvimden seç">📅</button><input type="date" class="dpick" tabindex="-1" value="${e.date||''}"></td>
+    <td class="dn${isMon(e.date)?' mon':''}" data-c="day">${dayName(e.date)}</td>
+    <td><input data-f="shift" list="shiftList" value="${esc(e.shift)}" autocomplete="off"></td>
+    <td><input data-f="op" list="opList" value="${esc(e.op)}" autocomplete="off"></td>
+    <td><input data-f="note" value="${esc(e.note)}"></td>
+    <td class="use" data-c="use">${entryUseText(e)}</td>
+    <td class="x"><button class="xbtn" data-act="rowdel" title="Satırı sil" tabindex="-1">✕</button></td>
+  </tr>`;
 }
-$("#btnOcrRegion").addEventListener("click", async ()=>{
-  if(!pendingMarkRect || !currentBookId) return;
-  const key = getApiKey();
-  if(!key){
-    toast("Önce ayarlardan API anahtarı ekle");
-    els.markNoteMask.classList.remove("active");
-    els.apiKeyInput.value = "";
-    els.settingsMask.classList.add("active");
-    return;
-  }
-  const page = currentPages()[currentIndex];
-  if(!page) return;
-  const btn = $("#btnOcrRegion");
-  btn.classList.add("loading");
-  try{
-    const b64 = await base64FromBlobRegion(page.blob, pendingMarkRect.rx, pendingMarkRect.ry, pendingMarkRect.rw, pendingMarkRect.rh, 900);
-    const text = await callAiTextRead(b64);
-    els.markNoteInput.value = text || "(okunabilir yazı bulunamadı)";
-  }catch(err){
-    toast(err.message || "Yazı okunamadı");
-  }finally{
-    btn.classList.remove("loading");
-  }
-});
-
-$("#markNoteSave").addEventListener("click", async ()=>{
-  if(!pendingMarkRect || !currentBookId){ els.markNoteMask.classList.remove("active"); exitMarkMode(); return; }
-  const pages = currentPages();
-  const page = pages[currentIndex];
-  if(!page){ els.markNoteMask.classList.remove("active"); exitMarkMode(); return; }
-  const {rx, ry, rw, rh} = pendingMarkRect;
-  const hl = {id: uid(), bookId: currentBookId, pageId: page.id, pageOrder: currentIndex, rx, ry, rw, rh, note: els.markNoteInput.value.trim(), createdAt: Date.now()};
-  await idbPut("highlights", hl);
-  if(!highlightsByBook[currentBookId]) highlightsByBook[currentBookId] = [];
-  highlightsByBook[currentBookId].push(hl);
-  els.markNoteMask.classList.remove("active");
-  exitMarkMode();
-  renderHighlightOverlays(currentIndex);
-  toast("İşaret kaydedildi");
-});
-
-let favThumbUrls = [];
-function makeFavThumb(blob, h){
-  return createImageBitmap(blob).then((bmp)=>{
-    const sx = h.rx*bmp.width, sy = h.ry*bmp.height, sw = h.rw*bmp.width, sh = h.rh*bmp.height;
-    const c = document.createElement("canvas");
-    c.width = 120; c.height = 156;
-    const ctx = c.getContext("2d");
-    ctx.fillStyle = "#ddd3bd"; ctx.fillRect(0,0,c.width,c.height);
-    const scale = Math.min(c.width/sw, c.height/sh);
-    const dw = sw*scale, dh = sh*scale;
-    ctx.drawImage(bmp, sx, sy, sw, sh, (c.width-dw)/2, (c.height-dh)/2, dw, dh);
-    try{ bmp.close(); }catch(err){}
-    return new Promise((res)=> c.toBlob((b)=>res(b?URL.createObjectURL(b):""), "image/jpeg", 0.8));
-  }).catch(()=>"");
-}
-
-let currentFavScope = null; // bookId string = that book's favorites, null = all books
-function openFavorites(scopeBookId){
-  currentFavScope = scopeBookId || null;
-  favThumbUrls.forEach(u=>URL.revokeObjectURL(u));
-  favThumbUrls = [];
-  let list;
-  if(currentFavScope){
-    list = (highlightsByBook[currentFavScope]||[]).slice();
-    list.sort((a,b)=>{
-      const pa = (pagesByBook[currentFavScope]||[]).findIndex(p=>p.id===a.pageId);
-      const pb = (pagesByBook[currentFavScope]||[]).findIndex(p=>p.id===b.pageId);
-      return pa-pb;
-    });
-    els.favTitle.textContent = "Favoriler";
-  } else {
-    list = [];
-    for(const b of books){ for(const h of (highlightsByBook[b.id]||[])) list.push(h); }
-    list.sort((a,b)=>b.createdAt-a.createdAt);
-    els.favTitle.textContent = "Tüm Favoriler";
-  }
-  els.favList.innerHTML = "";
-  if(list.length === 0){
-    els.favList.innerHTML = `<div class="fav-empty">Henüz işaretlenmiş bir bölüm yok. Bir kitabı okurken "İşaretle" ile ekleyebilirsin.</div>`;
-  } else {
-    for(const h of list){
-      const bookPages = pagesByBook[h.bookId] || [];
-      const pageIdx = bookPages.findIndex(p=>p.id===h.pageId);
-      const page = pageIdx >= 0 ? bookPages[pageIdx] : null;
-      const book = books.find(b=>b.id===h.bookId);
-      const row = document.createElement("div");
-      row.className = "fav-row";
-      row.innerHTML = `
-        <button class="fav-thumb" style="border:none;padding:0;"><img alt=""></button>
-        <button class="fav-info" style="border:none;background:none;text-align:left;padding:0;">
-          ${currentFavScope ? "" : `<div class="fav-book">${escapeHtml(book ? book.title : "Kitap")}</div>`}
-          <div class="fp">Sayfa ${pageIdx>=0 ? pageIdx+1 : "?"}</div>
-          <div class="fn">${escapeHtml(h.note || "İşaretli bölüm")}</div>
-        </button>
-        <button class="fav-del" aria-label="Sil">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m-9 0v14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V6"/></svg>
-        </button>`;
-      if(page){
-        makeFavThumb(page.blob, h).then((url)=>{
-          if(!url) return;
-          favThumbUrls.push(url);
-          const im = row.querySelector(".fav-thumb img");
-          if(im) im.src = url;
-        });
-      }
-      row.querySelector(".fav-del").addEventListener("click",(e)=>{ e.stopPropagation(); deleteHighlight(h); });
-      row.querySelector(".fav-thumb").addEventListener("click", ()=> jumpToFavorite(h));
-      row.querySelector(".fav-info").addEventListener("click", ()=> jumpToFavorite(h));
-      els.favList.appendChild(row);
+function refreshSeps(){
+  body.querySelectorAll('tr.sep').forEach(r=>r.remove());
+  let prev=null;
+  body.querySelectorAll('tr[data-id]').forEach(tr=>{
+    const e=entById(tr.dataset.id);
+    if(!e||!e.date)return;
+    const wk=weekKey(e.date);
+    if(prev&&wk!==prev){
+      const s=document.createElement('tr');s.className='sep';
+      s.innerHTML='<td colspan="11"></td>';
+      tr.parentNode.insertBefore(s,tr);
     }
-  }
-  els.favoritesMask.classList.add("active");
-}
-async function jumpToFavorite(h){
-  els.favoritesMask.classList.remove("active");
-  if(currentBookId === h.bookId){
-    const pages = currentPages();
-    const idx = pages.findIndex(p=>p.id===h.pageId);
-    if(idx < 0){ toast("Bu sayfa artık mevcut değil"); return; }
-    currentIndex = idx;
-    renderPage();
-  } else {
-    const pages = pagesByBook[h.bookId] || [];
-    if(!pages.some(p=>p.id===h.pageId)){ toast("Bu sayfa artık mevcut değil"); return; }
-    await openBook(h.bookId, "read", h.pageId);
-  }
-}
-async function deleteHighlight(h){
-  await idbDelete("highlights", h.id);
-  highlightsByBook[h.bookId] = (highlightsByBook[h.bookId]||[]).filter(x=>x.id!==h.id);
-  if(currentBookId === h.bookId) renderHighlightOverlays(currentIndex);
-  openFavorites(currentFavScope);
-}
-$("#favClose").addEventListener("click", ()=> els.favoritesMask.classList.remove("active"));
-$("#favoritesMask").addEventListener("click",(e)=>{ if(e.target===els.favoritesMask) els.favoritesMask.classList.remove("active"); });
-$("#sheetOpenFavs").addEventListener("click", ()=>{ els.sheetMask.classList.remove("active"); openFavorites(currentBookId); });
-$("#btnAllFavorites").addEventListener("click", ()=> openFavorites(null));
-
-/* ============ MANAGE PAGES (reorder / delete) ============ */
-let pagesManageThumbUrls = [];
-function openPagesManage(){
-  pagesManageThumbUrls.forEach(u=>URL.revokeObjectURL(u));
-  pagesManageThumbUrls = [];
-  const pages = currentPages();
-  els.pagesManageList.innerHTML = "";
-  if(pages.length === 0){
-    els.pagesManageList.innerHTML = `<div class="fav-empty">Bu kitapta henüz sayfa yok.</div>`;
-  } else {
-    pages.forEach((p, idx)=>{
-      const row = document.createElement("div");
-      row.className = "pgm-row";
-      const url = URL.createObjectURL(p.blob);
-      pagesManageThumbUrls.push(url);
-      row.innerHTML = `
-        <div class="fav-thumb"><img src="${url}" alt=""></div>
-        <div class="pgm-info">Sayfa ${idx+1}</div>
-        <div class="pgm-actions">
-          <button class="pgm-btn" data-act="up" ${idx===0?"disabled":""} aria-label="Yukarı taşı">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
-          </button>
-          <button class="pgm-btn" data-act="down" ${idx===pages.length-1?"disabled":""} aria-label="Aşağı taşı">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
-          </button>
-          <button class="pgm-btn danger" data-act="del" aria-label="Sayfayı sil">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m-9 0v14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V6"/></svg>
-          </button>
-        </div>`;
-      row.querySelector('[data-act="up"]').addEventListener("click", ()=> movePage(idx, -1));
-      row.querySelector('[data-act="down"]').addEventListener("click", ()=> movePage(idx, 1));
-      row.querySelector('[data-act="del"]').addEventListener("click", ()=> deletePageAction(p.id));
-      els.pagesManageList.appendChild(row);
-    });
-  }
-  els.pagesManageMask.classList.add("active");
-}
-async function movePage(idx, dir){
-  const pages = currentPages();
-  const j = idx+dir;
-  if(j<0 || j>=pages.length) return;
-  const tmp = pages[idx]; pages[idx] = pages[j]; pages[j] = tmp;
-  pages[idx].order = idx; pages[j].order = j;
-  await idbPut("pages", pages[idx]);
-  await idbPut("pages", pages[j]);
-  if(currentIndex === idx) currentIndex = j;
-  else if(currentIndex === j) currentIndex = idx;
-  openPagesManage();
-}
-async function deletePageAction(pageId){
-  const bookId = currentBookId;
-  const pages = pagesByBook[bookId] || [];
-  const idx = pages.findIndex(p=>p.id===pageId);
-  if(idx < 0) return;
-  await idbDelete("pages", pageId);
-  pages.splice(idx, 1);
-  for(let i=0;i<pages.length;i++){
-    if(pages[i].order !== i){ pages[i].order = i; await idbPut("pages", pages[i]); }
-  }
-  const hls = highlightsByBook[bookId] || [];
-  const toRemove = hls.filter(h=>h.pageId===pageId);
-  for(const h of toRemove){ await idbDelete("highlights", h.id); }
-  highlightsByBook[bookId] = hls.filter(h=>h.pageId!==pageId);
-  if(currentIndex >= pages.length) currentIndex = Math.max(0, pages.length-1);
-  openPagesManage();
-  toast("Sayfa silindi");
-}
-$("#pagesManageClose").addEventListener("click", ()=>{ els.pagesManageMask.classList.remove("active"); renderPage(); });
-$("#pagesManageMask").addEventListener("click",(e)=>{ if(e.target===els.pagesManageMask){ els.pagesManageMask.classList.remove("active"); renderPage(); } });
-$("#sheetOpenPages").addEventListener("click", ()=>{ els.sheetMask.classList.remove("active"); openPagesManage(); });
-
-/* ============ PDF EXPORT (backup) ============ */
-function sanitizeFilename(name){
-  const s = (name||"kitap").replace(/[\\/:*?"<>|]+/g, "_").trim();
-  return s || "kitap";
-}
-async function getImageDims(blob){
-  const bmp = await createImageBitmap(blob);
-  const dims = {width: bmp.width, height: bmp.height};
-  try{ bmp.close(); }catch(e){}
-  return dims;
-}
-// Builds a valid multi-page PDF by embedding each page's JPEG bytes directly
-// (Filter /DCTDecode) — no re-encoding, no external library needed.
-async function buildPdfFromPages(pages){
-  const encoder = new TextEncoder();
-  const parts = [];
-  let offset = 0;
-  const offsets = [];
-  function push(bytesOrStr){
-    const bytes = typeof bytesOrStr === "string" ? encoder.encode(bytesOrStr) : bytesOrStr;
-    parts.push(bytes);
-    offset += bytes.length;
-  }
-  function beginObj(num){ offsets[num] = offset; push(num + " 0 obj\n"); }
-  function endObj(){ push("\nendobj\n"); }
-
-  const jpegs = [];
-  for(const p of pages){
-    const buf = await p.blob.arrayBuffer();
-    const dims = await getImageDims(p.blob);
-    jpegs.push({ bytes: new Uint8Array(buf), width: dims.width, height: dims.height });
-  }
-  const n = jpegs.length;
-  push(new Uint8Array([0x25,0x50,0x44,0x46,0x2D,0x31,0x2E,0x34,0x0A,0x25,0xE2,0xE3,0xCF,0xD3,0x0A])); // "%PDF-1.4\n%<binary>\n"
-
-  const catalogNum = 1, pagesNum = 2;
-  const pageNums = [], contentNums = [], imageNums = [];
-  let nextObj = 3;
-  for(let i=0;i<n;i++){ pageNums.push(nextObj++); contentNums.push(nextObj++); imageNums.push(nextObj++); }
-
-  beginObj(catalogNum);
-  push(`<< /Type /Catalog /Pages ${pagesNum} 0 R >>`);
-  endObj();
-
-  beginObj(pagesNum);
-  push(`<< /Type /Pages /Kids [${pageNums.map(pn=>pn+" 0 R").join(" ")}] /Count ${n} >>`);
-  endObj();
-
-  for(let i=0;i<n;i++){
-    const {width, height, bytes} = jpegs[i];
-    let pw, ph;
-    if(width >= height){ pw = 792; ph = 792*height/width; } else { ph = 792; pw = 792*width/height; }
-    pw = Math.round(pw); ph = Math.round(ph);
-
-    beginObj(pageNums[i]);
-    push(`<< /Type /Page /Parent ${pagesNum} 0 R /MediaBox [0 0 ${pw} ${ph}] /Resources << /XObject << /Im0 ${imageNums[i]} 0 R >> >> /Contents ${contentNums[i]} 0 R >>`);
-    endObj();
-
-    const contentBytes = encoder.encode(`q ${pw} 0 0 ${ph} 0 0 cm /Im0 Do Q`);
-    beginObj(contentNums[i]);
-    push(`<< /Length ${contentBytes.length} >>\nstream\n`);
-    push(contentBytes);
-    push("\nendstream");
-    endObj();
-
-    beginObj(imageNums[i]);
-    push(`<< /Type /XObject /Subtype /Image /Width ${width} /Height ${height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${bytes.length} >>\nstream\n`);
-    push(bytes);
-    push("\nendstream");
-    endObj();
-  }
-
-  const xrefOffset = offset;
-  const totalObjs = nextObj;
-  push(`xref\n0 ${totalObjs}\n`);
-  push("0000000000 65535 f \n");
-  for(let i=1;i<totalObjs;i++){
-    push((offsets[i]||0).toString().padStart(10,"0") + " 00000 n \n");
-  }
-  push(`trailer\n<< /Size ${totalObjs} /Root ${catalogNum} 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`);
-
-  return new Blob(parts, {type:"application/pdf"});
-}
-async function exportBookAsPdf(bookId){
-  const book = books.find(b=>b.id===bookId);
-  const pages = pagesByBook[bookId] || [];
-  if(pages.length === 0){ toast("Bu kitapta sayfa yok"); return; }
-  toast("PDF hazırlanıyor…");
-  try{
-    const blob = await buildPdfFromPages(pages);
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = sanitizeFilename(book ? book.title : "kitap") + ".pdf";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(()=> URL.revokeObjectURL(url), 4000);
-  }catch(err){
-    toast("PDF oluşturulamadı");
-  }
-}
-
-/* ============ PDF IMPORT (restore) ============ */
-// pdf.js is only fetched the first time an import is actually requested, so
-// core scanning/reading stays fully offline-capable without this dependency.
-let _pdfJsPromise = null;
-function loadPdfJs(){
-  if(window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
-  if(_pdfJsPromise) return _pdfJsPromise;
-  _pdfJsPromise = new Promise((resolve, reject)=>{
-    const s = document.createElement("script");
-    s.src = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/legacy/build/pdf.min.js";
-    s.onload = ()=>{
-      const lib = window.pdfjsLib || window["pdfjs-dist/build/pdf"];
-      if(!lib){ reject(new Error("pdf.js yüklenemedi")); return; }
-      window.pdfjsLib = lib;
-      lib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/legacy/build/pdf.worker.min.js";
-      resolve(lib);
-    };
-    s.onerror = ()=> reject(new Error("pdf.js yüklenemedi (internet bağlantını kontrol et)"));
-    document.head.appendChild(s);
+    prev=wk;
   });
-  return _pdfJsPromise;
 }
-let pdfImportTargetBookId = null, pdfImportIsNewBook = false;
-function triggerPdfImport(bookId, isNewBook){
-  pdfImportTargetBookId = bookId;
-  pdfImportIsNewBook = isNewBook;
-  els.pdfImportInput.click();
+function updateOpList(){
+  const ops=[...new Set(S.entries.map(e=>e.op).concat(S.settings.lastOp).filter(Boolean))];
+  $('opList').innerHTML=ops.map(o=>`<option value="${esc(o)}">`).join('');
 }
-els.pdfImportInput.addEventListener("change", async (e)=>{
-  const file = e.target.files && e.target.files[0];
-  els.pdfImportInput.value = "";
-  if(!file || !pdfImportTargetBookId) return;
-  await importPdfIntoBook(pdfImportTargetBookId, file, pdfImportIsNewBook);
-});
-async function importPdfIntoBook(bookId, file, isNewBook){
-  toast("PDF yükleniyor…");
-  try{
-    const pdfjsLib = await loadPdfJs();
-    const buf = await file.arrayBuffer();
-    const doc = await pdfjsLib.getDocument({ data: buf }).promise;
-    const pages = pagesByBook[bookId] || (pagesByBook[bookId] = []);
-    const startOrder = pages.length;
-    for(let i=1; i<=doc.numPages; i++){
-      toast(`Sayfa ${i}/${doc.numPages} işleniyor…`);
-      const page = await doc.getPage(i);
-      const base = page.getViewport({ scale: 1 });
-      const longEdge = Math.max(base.width, base.height);
-      const scale = Math.max(0.5, Math.min(3, 2000/longEdge));
-      const viewport = page.getViewport({ scale });
-      const canvas = document.createElement("canvas");
-      canvas.width = Math.round(viewport.width);
-      canvas.height = Math.round(viewport.height);
-      const ctx = canvas.getContext("2d");
-      await page.render({ canvasContext: ctx, viewport }).promise;
-      const blob = await new Promise((res)=> canvas.toBlob(res, "image/jpeg", 0.9));
-      const pageRec = { id: uid(), bookId, order: startOrder + (i-1), blob };
-      await idbPut("pages", pageRec);
-      pages.push(pageRec);
+function updateSummary(){
+  const f=S.entries.filter(e=>!isBlank(e));
+  const q=f.reduce((a,e)=>a+(e.qty||0),0);
+  const bars=f.reduce((a,e)=>a+entryBars(e),0);
+  const kg=f.reduce((a,e)=>{const p=prodByCode(e.code),s=p&&stockById(p.stockId);return s?a+entryBars(e)*bw(s):a},0);
+  $('entSum').innerHTML=`<b>${f.length}</b> kayıt · toplam <b>${fmt(q)}</b> adet · stoktan eksilen <b>${fmt(bars)}</b> çubuk (${fmt(kg)} kg)`;
+}
+function renderGrid(){
+  ensureSpare(25);
+  const info=computeInfo();
+  body.innerHTML=S.entries.map((e,i)=>rowHtml(e,i,info)).join('');
+  refreshSeps();updateOpList();updateSummary();
+  $('shiftList').innerHTML=SHIFTS.map(x=>`<option value="${x}">`).join('');
+}
+function appendSpareDom(){
+  const before=S.entries.length;
+  ensureSpare(25);
+  for(let i=before;i<S.entries.length;i++)body.insertAdjacentHTML('beforeend',rowHtml(S.entries[i],i,null));
+}
+function updateEntryRows(){
+  body.querySelectorAll('tr[data-id]').forEach(tr=>{
+    const e=entById(tr.dataset.id);if(!e)return;
+    tr.querySelector('[data-c=use]').innerHTML=entryUseText(e);
+    tr.querySelector('[data-f=code]').classList.toggle('bad',!!e.code&&!prodByCode(e.code));
+  });
+  updateSummary();
+}
+function afterChange(){
+  save();renderStocks();renderTop();
+  document.querySelectorAll('#prodBody tr[data-id]').forEach(updateProdRow);
+  updateEntryRows();updateTargetCells();
+}
+
+/* bir hücre değerini kayda işle; geçersiz tarihte false döner */
+function setValue(en,f,v){
+  v=String(v);
+  if(f==='target'){en.target=Math.max(0,Math.round(num(v)));return true}
+  if(f==='code'){en.code=v.trim();return true}
+  if(f==='qty'){en.qty=Math.max(0,Math.round(num(v)));return true}
+  if(f==='date'){const d=parseDate(v);if(d===null)return false;en.date=d;return true}
+  if(f==='shift'){en.shift=normShift(v);return true}
+  if(f==='op'){en.op=v.trim();if(en.op)S.settings.lastOp=en.op;return true}
+  if(f==='note'){en.note=v;return true}
+  return false;
+}
+/* boş satıra ilk değer girilince: tarih bugün, vardiya ve operatör üst satırdan/saatten gelir */
+function autofill(en){
+  const idx=S.entries.indexOf(en);
+  let prev=null;
+  for(let i=idx-1;i>=0;i--){if(!isBlank(S.entries[i])){prev=S.entries[i];break}}
+  if(!en.date)en.date=today();
+  if(!en.shift)en.shift=(prev&&prev.shift&&prev.date===en.date)?prev.shift:curShift();
+  if(!en.op)en.op=prev&&prev.op?prev.op:(S.settings.lastOp||'');
+}
+function syncRow(tr,en,skip){
+  const set=(f,v)=>{const i=tr.querySelector(`[data-f=${f}]`);if(i&&i!==skip)i.value=v};
+  set('date',dispDate(en.date));set('shift',en.shift);set('op',en.op);
+  tr.querySelector('.dpick').value=en.date||'';
+  const dn=tr.querySelector('[data-c=day]');
+  dn.textContent=dayName(en.date);
+  dn.classList.toggle('mon',isMon(en.date));
+}
+function applyField(inp,commit){
+  const f=inp.dataset.f,tr=inp.closest('tr'),en=entById(tr.dataset.id);
+  if(!en)return;
+  const wasBlank=isBlank(en);
+  const ok=setValue(en,f,inp.value);
+  if(f==='date'){inp.classList.toggle('bad',!ok);if(!ok)return}
+  if(commit){
+    if(f==='code'){
+      const p=prodByCode(en.code)||uniqueContains(en.code);
+      if(p){en.code=p.code;inp.value=p.code}
     }
-    toast("PDF içe aktarıldı");
-    if(isNewBook){
-      await openBook(bookId, "edit");
-    } else if(currentBookId === bookId){
-      renderPage();
-      if(els.pagesManageMask.classList.contains("active")) openPagesManage();
-    }
-  }catch(err){
-    toast(err && err.message ? err.message : "PDF içe aktarılamadı");
+    else if(f==='qty')inp.value=en.qty||'';
+    else if(f==='date')inp.value=dispDate(en.date);
+    else if(f==='shift')inp.value=en.shift;
+  }
+  if(!isBlank(en)){
+    if(wasBlank)autofill(en);
+    else if(!en.date&&f!=='date')en.date=today();
+  }
+  syncRow(tr,en,inp);
+  if(f==='date'||wasBlank)refreshSeps();
+  if(f==='op')updateOpList();
+  afterChange();
+  if(commit)checkAlarms();
+  if(spareCount()<10)appendSpareDom();
+}
+function commitTarget(inp){
+  const tr=inp.closest('tr'),en=entById(tr.dataset.id);
+  if(activeTarget===inp)activeTarget=null;
+  if(en&&inp.dataset.touched==='1'){
+    const wasBlank=isBlank(en);
+    setValue(en,'target',inp.value.trim()===''?'0':inp.value);
+    inp.dataset.touched='';
+    if(wasBlank&&!isBlank(en)){autofill(en);syncRow(tr,en,null);refreshSeps()}
+    afterChange();checkAlarms();
+    if(spareCount()<10)appendSpareDom();
+  }else{
+    updateTargetCells();
   }
 }
 
-/* ============ BOOK MENU (rename/delete) ============ */
-$("#btnBookMenu").addEventListener("click", ()=>{
-  const book = books.find(b=>b.id===currentBookId);
-  els.sheetTitle.textContent = "Kitap ayarları";
-  els.bookNameInput.value = book ? book.title : "";
-  els.deleteRow.style.display = "flex";
-  els.favRow.style.display = "flex";
-  els.pagesRow.style.display = "flex";
-  els.exportPdfRow.style.display = "flex";
-  els.importPdfRow.style.display = "flex";
-  els.importRow.style.display = "none";
-  els.sheetMask.dataset.mode = "";
-  els.sheetMask.classList.add("active");
-});
-$("#sheetCancel").addEventListener("click", ()=> els.sheetMask.classList.remove("active"));
-$("#sheetMask").addEventListener("click",(e)=>{ if(e.target===els.sheetMask) els.sheetMask.classList.remove("active"); });
-$("#sheetSave").addEventListener("click", async ()=>{
-  const name = els.bookNameInput.value.trim();
-  if(!name){ toast("Bir isim gir"); return; }
-  if(currentBookId && els.viewReader.classList.contains("active")){
-    const book = books.find(b=>b.id===currentBookId);
-    book.title = name;
-    await idbPut("books", book);
-    els.readerTitle.textContent = name;
-  } else if(pendingNewBookId){
-    const book = books.find(b=>b.id===pendingNewBookId);
-    if(book){ book.title = name; await idbPut("books", book); }
-  }
-  els.sheetMask.classList.remove("active");
-});
-$("#sheetDelete").addEventListener("click", async ()=>{
-  if(!currentBookId) return;
-  const pages = await idbGetAllByIndex("pages","bookId",currentBookId);
-  for(const p of pages) await idbDelete("pages", p.id);
-  const hls = await idbGetAllByIndex("highlights","bookId",currentBookId);
-  for(const h of hls) await idbDelete("highlights", h.id);
-  delete highlightsByBook[currentBookId];
-  await idbDelete("books", currentBookId);
-  els.sheetMask.classList.remove("active");
-  showView("library");
-  await loadLibrary();
-  toast("Kitap silindi");
-});
-
-/* ============ NEW BOOK / SCAN FLOW ============ */
-let pendingNewBookId = null;
-$("#btnNewBook").addEventListener("click", startNewBookFlow);
-function startNewBookFlow(){
-  els.sheetTitle.textContent = "Yeni kitap";
-  els.bookNameInput.value = "";
-  els.deleteRow.style.display = "none";
-  els.favRow.style.display = "none";
-  els.pagesRow.style.display = "none";
-  els.exportPdfRow.style.display = "none";
-  els.importPdfRow.style.display = "none";
-  els.importRow.style.display = "flex";
-  pendingNewBookId = null;
-  els.sheetMask.classList.add("active");
-  els.sheetMask.dataset.mode = "new";
-}
-// override save behavior for "new book" mode
-const originalSave = $("#sheetSave");
-originalSave.addEventListener("click", async ()=>{
-  if(els.sheetMask.dataset.mode === "new"){
-    const name = els.bookNameInput.value.trim() || "Adsız kitap";
-    const book = {id: uid(), title: name, createdAt: Date.now()};
-    await idbPut("books", book);
-    books.unshift(book);
-    pagesByBook[book.id] = [];
-    scanTargetBookId = book.id;
-    els.sheetMask.dataset.mode = "";
-    els.sheetMask.classList.remove("active");
-    openScanner(book.id);
-  }
-});
-$("#sheetImportPdf").addEventListener("click", async ()=>{
-  const name = els.bookNameInput.value.trim() || "Adsız kitap";
-  const book = {id: uid(), title: name, createdAt: Date.now()};
-  await idbPut("books", book);
-  books.unshift(book);
-  pagesByBook[book.id] = [];
-  highlightsByBook[book.id] = [];
-  els.sheetMask.dataset.mode = "";
-  els.sheetMask.classList.remove("active");
-  triggerPdfImport(book.id, true);
-});
-$("#sheetExportPdf").addEventListener("click", ()=>{
-  els.sheetMask.classList.remove("active");
-  exportBookAsPdf(currentBookId);
-});
-$("#sheetImportIntoPdf").addEventListener("click", ()=>{
-  els.sheetMask.classList.remove("active");
-  triggerPdfImport(currentBookId, false);
-});
-
-$("#btnAddPage").addEventListener("click", ()=> openScanner(currentBookId));
-
-async function openScanner(bookId){
-  scanTargetBookId = bookId;
-  showView("scan");
-  updateScanCount();
-  setAutoScanMode(false); // manual system is always the default on entry
-  await startCamera();
-}
-function updateScanCount(){
-  const n = (pagesByBook[scanTargetBookId] || []).length;
-  els.scanCount.textContent = n + (n===1 ? " sayfa tarandı" : " sayfa tarandı");
-}
-
-$("#btnScanClose").addEventListener("click", async ()=>{
-  showView("library");
-  await loadLibrary();
-});
-$("#btnScanDone").addEventListener("click", async ()=>{
-  if(currentBookId === scanTargetBookId && els.viewReader.classList.contains("active")){
-    showView("reader");
-    renderPage();
-  } else {
-    await openBook(scanTargetBookId, "edit");
-  }
-});
-
-/* ---- camera ---- */
-async function startCamera(){
-  els.camFallback.style.display = "none";
-  els.camVideo.style.display = "block";
-  try{
-    stream = await navigator.mediaDevices.getUserMedia({
-      video:{ facingMode:{ideal:"environment"}, width:{ideal:1920}, height:{ideal:1080} },
-      audio:false
-    });
-    els.camVideo.srcObject = stream;
-    if(autoScanMode) startAutoLoop();
-  }catch(err){
-    els.camVideo.style.display = "none";
-    els.camFallback.style.display = "flex";
-  }
-}
-function stopCamera(){
-  if(stream){ stream.getTracks().forEach(t=>t.stop()); stream = null; }
-  stopAutoLoop();
-}
-
-$("#btnShutter").addEventListener("click", ()=>{
-  if(!stream){ els.galleryInput.click(); return; }
-  const video = els.camVideo;
-  const canvas = document.createElement("canvas");
-  canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-  const ctx = canvas.getContext("2d");
-  ctx.drawImage(video, 0, 0);
-  canvas.toBlob((blob)=>{ openCrop(blob); }, "image/jpeg", 0.92);
-});
-$("#btnGallery").addEventListener("click", ()=> els.galleryInput.click());
-els.galleryInput.addEventListener("change", (e)=>{
-  const files = Array.from(e.target.files || []);
-  if(files.length) openCrop(files[0]);
-  els.galleryInput.value = "";
-});
-
-/* ============ AUTO-SCAN (optional live edge detection + auto-capture) ============
-   Off by default — the manual shutter/gallery flow above is unchanged and is
-   always what a fresh scan session starts with. This is a lightweight,
-   from-scratch heuristic (no OpenCV/ML): it looks for a bright, roughly
-   quadrilateral region (the page) against a darker background, tracks it
-   across a few frames for stability, and captures + perspective-warps
-   automatically once it holds steady. Works best with reasonable lighting
-   contrast between page and background — not as robust as a full CV
-   pipeline, but genuinely functional for typical desk/notebook photos. */
-let autoScanMode = false;
-let autoLoopHandle = null;
-let autoHistory = [];
-let autoCooldownUntil = 0;
-let autoBusy = false;
-const autoDetectCanvas = document.createElement("canvas");
-
-function setAutoScanMode(on){
-  autoScanMode = on;
-  els.btnAutoScanToggle.classList.toggle("on", on);
-  els.btnAutoScanToggle.setAttribute("aria-pressed", on ? "true" : "false");
-  els.btnAutoScanToggle.textContent = on ? "Otomatik: Açık" : "Otomatik: Kapalı";
-  els.viewScan.classList.toggle("auto-on", on);
-  autoHistory = [];
-  autoCooldownUntil = 0;
-  setGuideState("idle");
-  if(on) startAutoLoop(); else stopAutoLoop();
-}
-$("#btnAutoScanToggle").addEventListener("click", ()=> setAutoScanMode(!autoScanMode));
-
-function startAutoLoop(){
-  stopAutoLoopTimer();
-  autoLoopHandle = setInterval(autoTick, 260);
-}
-function stopAutoLoopTimer(){
-  if(autoLoopHandle){ clearInterval(autoLoopHandle); autoLoopHandle = null; }
-}
-function stopAutoLoop(){
-  stopAutoLoopTimer();
-  setGuideState("idle");
-  els.autoQuadPoly.setAttribute("points", "");
-}
-function setGuideState(state){
-  els.guideFrame.classList.remove("state-detecting", "state-stable");
-  if(state === "detecting") els.guideFrame.classList.add("state-detecting");
-  if(state === "stable") els.guideFrame.classList.add("state-stable");
-}
-
-// Approximates the page quad from a downscaled frame: finds pixels brighter
-// than the frame's mean (paper vs. background) and takes the four extreme
-// corner points of that bright region via the classic x+y / x-y trick.
-function detectPageQuad(videoEl){
-  if(!videoEl.videoWidth || !videoEl.videoHeight) return null;
-  const w = 220, h = Math.round(220 * videoEl.videoHeight / videoEl.videoWidth);
-  if(!h) return null;
-  autoDetectCanvas.width = w; autoDetectCanvas.height = h;
-  const ctx = autoDetectCanvas.getContext("2d", { willReadFrequently: true });
-  ctx.drawImage(videoEl, 0, 0, w, h);
-  let data;
-  try{ data = ctx.getImageData(0, 0, w, h).data; }catch(e){ return null; }
-
-  let sum = 0;
-  const lum = new Float32Array(w*h);
-  for(let i=0, p=0; i<w*h; i++, p+=4){
-    const l = 0.299*data[p] + 0.587*data[p+1] + 0.114*data[p+2];
-    lum[i] = l; sum += l;
-  }
-  const mean = sum/(w*h);
-  const threshold = mean + 14;
-
-  let minSum=Infinity, maxSum=-Infinity, minDiff=Infinity, maxDiff=-Infinity;
-  let pMinSum=null, pMaxSum=null, pMinDiff=null, pMaxDiff=null;
-  let bright = 0;
-  for(let y=0;y<h;y++){
-    for(let x=0;x<w;x++){
-      if(lum[y*w+x] > threshold){
-        bright++;
-        const s=x+y, d=x-y;
-        if(s<minSum){minSum=s; pMinSum={x,y};}
-        if(s>maxSum){maxSum=s; pMaxSum={x,y};}
-        if(d<minDiff){minDiff=d; pMinDiff={x,y};}
-        if(d>maxDiff){maxDiff=d; pMaxDiff={x,y};}
-      }
+body.addEventListener('input',e=>{
+  const inp=e.target.closest('input[data-f]');if(!inp)return;
+  const f=inp.dataset.f;
+  if(f==='target'){inp.dataset.touched='1';return}   // hücreden çıkınca işlenir
+  if(f==='date'||f==='shift')return;                 // bunlar da hücreden çıkınca işlenir
+  applyField(inp,false);
+  if(f==='code'){
+    openMenu(inp,false);
+    const p=prodByCode(inp.value);
+    if(p){                                           // listede varsa otomatik seçilir
+      if(inp.value!==p.code)inp.value=p.code;
+      const en=entById(inp.closest('tr').dataset.id);
+      if(en)en.code=p.code;
+      closeMenu();
     }
   }
-  const area = bright/(w*h);
-  if(area < 0.15 || area > 0.97 || !pMinSum || !pMaxSum || !pMinDiff || !pMaxDiff) return null;
-
-  const quad = {
-    tl: {x: pMinSum.x/w, y: pMinSum.y/h},
-    br: {x: pMaxSum.x/w, y: pMaxSum.y/h},
-    tr: {x: pMaxDiff.x/w, y: pMaxDiff.y/h},
-    bl: {x: pMinDiff.x/w, y: pMinDiff.y/h}
-  };
-  return quadLooksValid(quad) ? quad : null;
-}
-
-// Maps a raw-video-frame fraction to the on-screen fraction, accounting for
-// the object-fit:cover crop between the video's native aspect and its box.
-function videoDisplayCrop(){
-  const vw = els.camVideo.videoWidth, vh = els.camVideo.videoHeight;
-  const wrap = els.camVideo.parentElement;
-  const cw = wrap.clientWidth, ch = wrap.clientHeight;
-  if(!vw || !vh || !cw || !ch) return {cropFracX:0, cropFracY:0};
-  const videoAR = vw/vh, containerAR = cw/ch;
-  let cropFracX = 0, cropFracY = 0;
-  if(videoAR > containerAR) cropFracX = (1 - containerAR/videoAR)/2;
-  else if(videoAR < containerAR) cropFracY = (1 - videoAR/containerAR)/2;
-  return {cropFracX, cropFracY};
-}
-function mapQuadToDisplay(quad){
-  const {cropFracX, cropFracY} = videoDisplayCrop();
-  const dx = 1 - 2*cropFracX, dy = 1 - 2*cropFracY;
-  const m = (p)=>({ x:(p.x-cropFracX)/dx, y:(p.y-cropFracY)/dy });
-  return { tl:m(quad.tl), tr:m(quad.tr), br:m(quad.br), bl:m(quad.bl) };
-}
-
-function quadsAreStable(hist){
-  const last = hist[hist.length-1];
-  for(let i=hist.length-2;i>=0;i--){
-    const q = hist[i];
-    const d = (dist(last.tl,q.tl)+dist(last.tr,q.tr)+dist(last.br,q.br)+dist(last.bl,q.bl))/4;
-    if(d > 0.025) return false;
-  }
-  return true;
-}
-
-function autoTick(){
-  if(!autoScanMode || autoBusy || !stream) return;
-  if(Date.now() < autoCooldownUntil) return;
-  const quad = detectPageQuad(els.camVideo);
-  if(!quad){
-    autoHistory = [];
-    setGuideState("idle");
-    els.autoQuadPoly.setAttribute("points", "");
+});
+body.addEventListener('change',e=>{
+  if(e.target.classList.contains('dpick')){        // takvimden seçim
+    const t=e.target.closest('tr').querySelector('[data-f=date]');
+    t.value=dispDate(e.target.value);
+    applyField(t,true);
     return;
   }
-  setGuideState("detecting");
-  const disp = mapQuadToDisplay(quad);
-  const pts = [disp.tl, disp.tr, disp.br, disp.bl].map(p=>`${(p.x*100).toFixed(1)},${(p.y*100).toFixed(1)}`).join(" ");
-  els.autoQuadPoly.setAttribute("points", pts);
-
-  autoHistory.push(quad);
-  if(autoHistory.length > 3) autoHistory.shift();
-  if(autoHistory.length >= 3 && quadsAreStable(autoHistory)){
-    setGuideState("stable");
-    autoCapture(quad);
+  const inp=e.target.closest('input[data-f]');
+  if(!inp||inp.dataset.f==='target')return;
+  applyField(inp,true);
+});
+body.addEventListener('focusin',e=>{
+  const inp=e.target.closest('input[data-f]');if(!inp)return;
+  const f=inp.dataset.f;
+  if(f==='target'){
+    const en=entById(inp.closest('tr').dataset.id);
+    activeTarget=inp;inp.dataset.touched='';
+    inp.value=en&&en.target>0?en.target:'';
+    setTimeout(()=>inp.select(),0);
+  }else if(f==='code'){
+    openMenu(inp,true);
+    setTimeout(()=>inp.select(),0);
   }
+});
+body.addEventListener('focusout',e=>{
+  const inp=e.target.closest('input[data-f]');if(!inp)return;
+  const f=inp.dataset.f;
+  if(f==='target')commitTarget(inp);
+  else if(f==='code')closeMenu();
+});
+function rowSibling(tr,dir){
+  let r=dir>0?tr.nextElementSibling:tr.previousElementSibling;
+  while(r&&!r.dataset.id)r=dir>0?r.nextElementSibling:r.previousElementSibling;
+  return r;
 }
-
-function flashCapture(){
-  const wrap = document.querySelector(".camera-wrap");
-  if(!wrap) return;
-  const flash = document.createElement("div");
-  flash.style.cssText = "position:absolute;inset:0;background:#fff;opacity:0.85;pointer-events:none;transition:opacity 380ms;z-index:6;";
-  wrap.appendChild(flash);
-  requestAnimationFrame(()=>{ flash.style.opacity = "0"; });
-  setTimeout(()=> flash.remove(), 420);
-}
-
-async function autoCapture(quad){
-  autoBusy = true;
-  try{
-    const video = els.camVideo;
-    const full = document.createElement("canvas");
-    full.width = video.videoWidth; full.height = video.videoHeight;
-    full.getContext("2d").drawImage(video, 0, 0);
-    const warped = warpQuadFromSource(full, full.width, full.height, quad);
-    const blob = await new Promise((res)=> warped.toBlob(res, "image/jpeg", 0.9));
-    if(!blob) throw new Error("blob boş");
-    const pages = pagesByBook[scanTargetBookId] || (pagesByBook[scanTargetBookId] = []);
-    const page = { id: uid(), bookId: scanTargetBookId, order: pages.length, blob };
-    await idbPut("pages", page);
-    pages.push(page);
-    updateScanCount();
-    flashCapture();
-    toast("Sayfa yakalandı — sıradaki sayfaya geç");
-  }catch(err){
-    toast("Otomatik çekim başarısız oldu");
-  }finally{
-    autoCooldownUntil = Date.now() + 1800;
-    autoHistory = [];
-    els.autoQuadPoly.setAttribute("points", "");
-    autoBusy = false;
+body.addEventListener('keydown',e=>{
+  const inp=e.target.closest('input[data-f]');if(!inp)return;
+  const f=inp.dataset.f,tr=inp.closest('tr');
+  if(f==='code'){
+    if(menuInp===inp){
+      if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();moveMenu(e.key==='ArrowDown'?1:-1);return}
+      if(e.key==='Escape'){closeMenu();return}
+      if(e.key==='Enter'){
+        const list=menuList();
+        let pick=null;
+        if(menuIdx>=0)pick=list[menuIdx];
+        else if(list.length===1&&norm(inp.value)&&!prodByCode(inp.value))pick=list[0];
+        if(pick){e.preventDefault();pickCode(pick.code);return}
+      }
+    }else if(e.key==='ArrowDown'){e.preventDefault();openMenu(inp,true);return}
   }
-}
-
-/* ============ CROP ============
-   #cropImg is a <canvas> holding the "baked" working image (rotation and
-   mirror applied). It is displayed at (pos.left, pos.top) and CSS-scaled
-   by fitScale*userScale. The crop rectangle lives in fixed viewport pixel
-   coordinates, independent of image size/orientation, so it always matches
-   what's on screen regardless of device size (fixes the old overflow bug). */
-let sourceBitmap = null;   // pristine decoded photo, never mutated
-let rotationDeg = 0;       // 0/90/180/270 (manual, step rotation), re-baked from sourceBitmap each time
-let fineRotationDeg = 0;   // -20..20, continuous deskew (from AI or fine control), added on top of rotationDeg
-let flipped = false;
-let naturalW = 0, naturalH = 0; // baked canvas size
-let fitScale = 1;          // "cover" scale at userScale=1
-let userScale = 1;         // 1..5, user pinch zoom
-let pos = {left:0, top:0}; // baked canvas position in viewport px
-let rect = {x:0,y:0,w:0,h:0}; // crop rectangle in viewport px
-
-function bakeWorkingCanvas(){
-  const sw = sourceBitmap.width, sh = sourceBitmap.height;
-  const rotated = rotationDeg % 180 !== 0;
-  naturalW = rotated ? sh : sw;
-  naturalH = rotated ? sw : sh;
-  els.cropImg.width = naturalW;
-  els.cropImg.height = naturalH;
-  const ctx = els.cropImg.getContext("2d");
-  const totalDeg = rotationDeg + fineRotationDeg;
-  // small extra rotation (deskew) leaves gaps at the corners of the fixed
-  // canvas size, so scale the source up slightly to compensate.
-  const comp = 1 + Math.min(0.3, Math.abs(fineRotationDeg) * 0.022);
-  ctx.save();
-  ctx.clearRect(0,0,naturalW,naturalH);
-  ctx.fillStyle = "#e9e2d0";
-  ctx.fillRect(0,0,naturalW,naturalH);
-  ctx.translate(naturalW/2, naturalH/2);
-  ctx.rotate(totalDeg * Math.PI/180);
-  if(flipped) ctx.scale(-1,1);
-  ctx.drawImage(sourceBitmap, -sw*comp/2, -sh*comp/2, sw*comp, sh*comp);
-  ctx.restore();
-}
-
-function vp(){ return {w: els.cropViewport.clientWidth, h: els.cropViewport.clientHeight}; }
-
-function clampPos(){
-  const {w:vpW, h:vpH} = vp();
-  const w = naturalW*fitScale*userScale, h = naturalH*fitScale*userScale;
-  pos.left = Math.min(0, Math.max(vpW - w, pos.left));
-  pos.top = Math.min(0, Math.max(vpH - h, pos.top));
-}
-
-function applyViewTransform(){
-  els.cropImg.style.transform = `translate(${pos.left}px, ${pos.top}px) scale(${fitScale*userScale})`;
-}
-
-function resetCropRect(){
-  const {w:vpW, h:vpH} = vp();
-  const mx = Math.max(vpW*0.08, 28), my = Math.max(vpH*0.05, 24);
-  rect = {x:mx, y:my, w:Math.max(56,vpW-2*mx), h:Math.max(56,vpH-2*my)};
-  layoutCropRect();
-}
-
-function layoutCropRect(){
-  const {w:vpW, h:vpH} = vp();
-  els.cropRect.style.left = rect.x+"px"; els.cropRect.style.top = rect.y+"px";
-  els.cropRect.style.width = rect.w+"px"; els.cropRect.style.height = rect.h+"px";
-  $("#hTL").style.left=rect.x+"px"; $("#hTL").style.top=rect.y+"px";
-  $("#hTR").style.left=(rect.x+rect.w)+"px"; $("#hTR").style.top=rect.y+"px";
-  $("#hBL").style.left=rect.x+"px"; $("#hBL").style.top=(rect.y+rect.h)+"px";
-  $("#hBR").style.left=(rect.x+rect.w)+"px"; $("#hBR").style.top=(rect.y+rect.h)+"px";
-  $("#dimTop").style.cssText   = `left:0; top:0; width:${vpW}px; height:${rect.y}px;`;
-  $("#dimBottom").style.cssText= `left:0; top:${rect.y+rect.h}px; width:${vpW}px; height:${Math.max(0,vpH-rect.y-rect.h)}px;`;
-  $("#dimLeft").style.cssText  = `left:0; top:${rect.y}px; width:${rect.x}px; height:${rect.h}px;`;
-  $("#dimRight").style.cssText = `left:${rect.x+rect.w}px; top:${rect.y}px; width:${Math.max(0,vpW-rect.x-rect.w)}px; height:${rect.h}px;`;
-}
-
-function resetView(){
-  const {w:vpW, h:vpH} = vp();
-  if(vpW===0 || vpH===0 || !naturalW) return;
-  fitScale = Math.max(vpW/naturalW, vpH/naturalH);
-  userScale = 1;
-  const w = naturalW*fitScale, h = naturalH*fitScale;
-  pos.left = (vpW-w)/2; pos.top = (vpH-h)/2;
-  clampPos();
-  applyViewTransform();
-  resetCropRect();
-}
-
-let originalPhotoBlob = null; // untouched original photo — lets "Sıfırla" undo even a perspective warp
-let warpApplied = false;
-
-function openCrop(blob){
-  showView("crop");
-  activeFilter = "none";
-  aiCleanParams = null;
-  warpApplied = false;
-  originalPhotoBlob = blob;
-  document.querySelectorAll(".filter-chip").forEach(c=>c.classList.toggle("on", c.dataset.filter==="none"));
-  createImageBitmap(blob).then((bmp)=>{
-    if(sourceBitmap){ try{ sourceBitmap.close(); }catch(e){} }
-    sourceBitmap = bmp;
-    rotationDeg = 0; flipped = false; fineRotationDeg = 0;
-    bakeWorkingCanvas();
-    requestAnimationFrame(()=> requestAnimationFrame(resetView)); // wait for layout to settle
-  }).catch(()=> toast("Fotoğraf açılamadı"));
-}
-
-window.addEventListener("resize", ()=>{ if(els.viewCrop.classList.contains("active")) resetView(); });
-if("ResizeObserver" in window){
-  // catches any case where the viewport's real size becomes available a
-  // frame later than expected (e.g. right after the view is shown) — the
-  // root cause of handles landing outside the visible area.
-  new ResizeObserver(()=>{ if(els.viewCrop.classList.contains("active") && naturalW) resetView(); }).observe(els.cropViewport);
-}
-
-/* ---- pan + pinch-zoom on the photo ---- */
-const activePointers = new Map();
-let panStart = null, pinchStartDist = null, pinchStartScale = 1, pinchStartPos = null, pinchFocal = null;
-function dist(a,b){ return Math.hypot(a.x-b.x, a.y-b.y); }
-
-els.cropViewport.addEventListener("pointerdown",(e)=>{
-  if(e.target.closest(".handle")) return;
+  let dir=0;
+  if(e.key==='Enter')dir=e.shiftKey?-1:1;
+  else if((e.key==='ArrowDown'||e.key==='ArrowUp')&&!['code','shift','op'].includes(f))dir=e.key==='ArrowDown'?1:-1;
+  else return;
   e.preventDefault();
-  els.cropViewport.setPointerCapture(e.pointerId);
-  activePointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
-  if(activePointers.size === 1){
-    panStart = {x:e.clientX, y:e.clientY, left:pos.left, top:pos.top};
-  } else if(activePointers.size === 2){
-    const pts = [...activePointers.values()];
-    pinchStartDist = dist(pts[0], pts[1]);
-    pinchStartScale = userScale;
-    pinchStartPos = {...pos};
-    const vpRect = els.cropViewport.getBoundingClientRect();
-    pinchFocal = {x:(pts[0].x+pts[1].x)/2 - vpRect.left, y:(pts[0].y+pts[1].y)/2 - vpRect.top};
-  }
+  let t=rowSibling(tr,dir);
+  if(!t&&dir>0){appendSpareDom();t=rowSibling(tr,dir)}
+  if(t){const n=t.querySelector(`[data-f="${f}"]`);n.focus();n.select()}
 });
-els.cropViewport.addEventListener("pointermove",(e)=>{
-  if(!activePointers.has(e.pointerId)) return;
-  activePointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
-  if(activePointers.size === 1 && panStart){
-    pos.left = panStart.left + (e.clientX - panStart.x);
-    pos.top = panStart.top + (e.clientY - panStart.y);
-    clampPos();
-    applyViewTransform();
-  } else if(activePointers.size === 2 && pinchStartDist){
-    const pts = [...activePointers.values()];
-    const d = dist(pts[0], pts[1]);
-    let newScale = Math.max(1, Math.min(5, pinchStartScale * (d/pinchStartDist)));
-    const oldW = naturalW*fitScale*pinchStartScale, oldH = naturalH*fitScale*pinchStartScale;
-    const relX = (pinchFocal.x - pinchStartPos.left)/oldW, relY = (pinchFocal.y - pinchStartPos.top)/oldH;
-    const newW = naturalW*fitScale*newScale, newH = naturalH*fitScale*newScale;
-    pos.left = pinchFocal.x - relX*newW;
-    pos.top = pinchFocal.y - relY*newH;
-    userScale = newScale;
-    clampPos();
-    applyViewTransform();
-  }
-});
-function endPointer(e){
-  activePointers.delete(e.pointerId);
-  pinchStartDist = null;
-  if(activePointers.size === 1){
-    const [p] = activePointers.values();
-    panStart = {x:p.x, y:p.y, left:pos.left, top:pos.top};
-  } else {
-    panStart = null;
-  }
-}
-els.cropViewport.addEventListener("pointerup", endPointer);
-els.cropViewport.addEventListener("pointercancel", endPointer);
-
-/* ---- crop rectangle handles (fixed viewport-pixel space) ---- */
-function makeDraggable(handle, corner){
-  handle.addEventListener("pointerdown",(e)=>{
-    e.preventDefault(); e.stopPropagation();
-    handle.setPointerCapture(e.pointerId);
-    const vpRect = els.cropViewport.getBoundingClientRect();
-    const minSize = 56;
-    const move = (ev)=>{
-      let x = Math.max(0, Math.min(vpRect.width, ev.clientX - vpRect.left));
-      let y = Math.max(0, Math.min(vpRect.height, ev.clientY - vpRect.top));
-      if(corner === "tl"){
-        rect.w = Math.max(minSize, rect.x + rect.w - x);
-        rect.h = Math.max(minSize, rect.y + rect.h - y);
-        rect.x = Math.min(x, rect.x + rect.w - minSize);
-        rect.y = Math.min(y, rect.y + rect.h - minSize);
-      } else if(corner === "tr"){
-        rect.w = Math.max(minSize, x - rect.x);
-        rect.h = Math.max(minSize, rect.y + rect.h - y);
-        rect.y = Math.min(y, rect.y + rect.h - minSize);
-      } else if(corner === "bl"){
-        rect.w = Math.max(minSize, rect.x + rect.w - x);
-        rect.x = Math.min(x, rect.x + rect.w - minSize);
-        rect.h = Math.max(minSize, y - rect.y);
-      } else if(corner === "br"){
-        rect.w = Math.max(minSize, x - rect.x);
-        rect.h = Math.max(minSize, y - rect.y);
-      }
-      layoutCropRect();
-    };
-    const up = (ev)=>{
-      handle.releasePointerCapture(e.pointerId);
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", up);
-    };
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", up);
+body.addEventListener('paste',e=>{
+  const inp=e.target.closest('input[data-f]');if(!inp)return;
+  const txt=(e.clipboardData||window.clipboardData).getData('text');
+  const clean=txt.replace(/\r/g,'').replace(/\n+$/,'');
+  if(!/[\t\n]/.test(clean))return;               // tek hücre: normal yapıştırma
+  e.preventDefault();
+  const lines=clean.split('\n');
+  const idx=S.entries.findIndex(x=>x.id===inp.closest('tr').dataset.id);
+  const c0=FIELDS.indexOf(inp.dataset.f);
+  while(S.entries.length<idx+lines.length+25)S.entries.push(newEntry());
+  lines.forEach((ln,r)=>{
+    const en=S.entries[idx+r],wasBlank=isBlank(en);
+    ln.split('\t').forEach((v,k)=>{
+      const f=FIELDS[c0+k];if(!f)return;
+      setValue(en,f,v.trim());
+      if(f==='code'){const p=prodByCode(en.code)||uniqueContains(en.code);if(p)en.code=p.code}
+    });
+    if(wasBlank&&!isBlank(en))autofill(en);
   });
-}
-makeDraggable($("#hTL"),"tl"); makeDraggable($("#hTR"),"tr");
-makeDraggable($("#hBL"),"bl"); makeDraggable($("#hBR"),"br");
-
-document.querySelectorAll(".filter-chip").forEach(chip=>{
-  if(chip.dataset.filter === "ai") return; // handled separately, needs an API call first
-  chip.addEventListener("click", ()=>{
-    activeFilter = chip.dataset.filter;
-    document.querySelectorAll(".filter-chip").forEach(c=>c.classList.toggle("on", c===chip));
-  });
+  save();renderAll();initAlarmed();
 });
-
-let aiCleanParams = null; // {blackPoint, whitePoint} from the last successful AI analysis
-function invalidateAiClean(){
-  aiCleanParams = null;
-  if(activeFilter === "ai"){
-    activeFilter = "none";
-    document.querySelectorAll(".filter-chip").forEach(c=>c.classList.toggle("on", c.dataset.filter==="none"));
-  }
-}
-
-$("#btnCropRotate").addEventListener("click", ()=>{
-  rotationDeg = (rotationDeg + 90) % 360;
-  fineRotationDeg = 0;
-  bakeWorkingCanvas();
-  resetView();
-  invalidateAiClean();
-});
-$("#btnCropFlip").addEventListener("click", ()=>{
-  flipped = !flipped;
-  bakeWorkingCanvas();
-  resetView();
-  invalidateAiClean();
-});
-$("#btnCropReset").addEventListener("click", ()=>{
-  if(warpApplied && originalPhotoBlob){
-    // a perspective warp replaced the working image — restore the untouched original
-    createImageBitmap(originalPhotoBlob).then((bmp)=>{
-      if(sourceBitmap){ try{ sourceBitmap.close(); }catch(e){} }
-      sourceBitmap = bmp;
-      warpApplied = false;
-      rotationDeg = 0; flipped = false; fineRotationDeg = 0;
-      bakeWorkingCanvas();
-      resetView();
-      invalidateAiClean();
-      toast("Perspektif düzeltmesi geri alındı");
-    }).catch(()=> toast("Sıfırlanamadı"));
+body.addEventListener('click',e=>{
+  const ci=e.target.closest('input[data-f=code]');
+  if(ci&&menuInp!==ci){openMenu(ci,true);return}
+  const cal=e.target.closest('button[data-act=cal]');
+  if(cal){
+    const tr=cal.closest('tr'),pk=tr.querySelector('.dpick'),en=entById(tr.dataset.id);
+    pk.value=(en&&en.date)||today();
+    try{pk.showPicker()}catch(x){pk.focus();pk.click()}
     return;
   }
-  rotationDeg = 0; flipped = false; fineRotationDeg = 0;
-  bakeWorkingCanvas();
-  resetView();
-  invalidateAiClean();
+  const b=e.target.closest('button[data-act=rowdel]');if(!b)return;
+  const id=b.closest('tr').dataset.id;
+  const i=S.entries.findIndex(x=>x.id===id);
+  if(i<0)return;
+  if(!isBlank(S.entries[i])&&!confirm('Bu satır silinsin mi? (Düşülen stok geri eklenir, alttaki satırlar yukarı kayar.)'))return;
+  S.entries.splice(i,1);
+  save();renderAll();initAlarmed();
 });
-$("#btnCropCancel").addEventListener("click", ()=>{
-  if(sourceBitmap){ try{ sourceBitmap.close(); }catch(e){} sourceBitmap = null; }
-  showView("scan");
+
+/* ---------- ayarlar / yedek ---------- */
+function loadSettings(){$('sWarn').value=S.settings.warn;$('sKerf').value=S.settings.kerf;$('sDens').value=S.settings.dens}
+['sWarn','sKerf','sDens'].forEach(id=>$(id).onchange=()=>{
+  S.settings.warn=num($('sWarn').value);
+  S.settings.kerf=Math.max(0,num($('sKerf').value));
+  S.settings.dens=num($('sDens').value)||7.85;
+  save();renderAll();
 });
+$('exp').onclick=()=>{
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(snapshot(),null,1)],{type:'application/json'}));
+  a.download='urun-takip-yedek-'+today()+'.json';a.click();
+};
+$('impBtn').onclick=()=>$('imp').click();
+$('imp').onchange=e=>{
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const j=JSON.parse(r.result);
+      if(!j.stocks||!j.products)throw 0;
+      if(!confirm('Mevcut veriler yedekle değiştirilsin mi?'))return;
+      S=normalize(j);
+      save();loadSettings();renderAll();initAlarmed();
+    }catch(x){alert('Geçersiz yedek dosyası.')}
+  };
+  r.readAsText(f);e.target.value='';
+};
 
-/* ---- AI: suggested "clean scan" levels (whiten background, sharpen ink) ---- */
-async function selectAiCleanFilter(){
-  const chip = $("#chipAiClean");
-  if(aiCleanParams){
-    activeFilter = "ai";
-    document.querySelectorAll(".filter-chip").forEach(c=>c.classList.toggle("on", c===chip));
-    return;
-  }
-  if(!getApiKey()){
-    toast("Önce ayarlardan API anahtarı ekle");
-    els.apiKeyInput.value = "";
-    els.settingsMask.classList.add("active");
-    return;
-  }
-  chip.classList.add("loading");
-  try{
-    const b64 = base64FromCanvas(els.cropImg, 1024);
-    const prompt = "This is a photo of a scanned document/book page. Respond with ONLY compact JSON, no markdown: "+
-      '{"blackPoint": <0-255, the pixel brightness that should be mapped to pure black>, '+
-      '"whitePoint": <0-255, the pixel brightness of the paper background, to be mapped to pure white>}. '+
-      "Pick values so that, after a levels stretch using them, the page background becomes clean white and the ink/text becomes crisp black.";
-    const text = await callGemini(prompt, b64);
-    const parsed = JSON.parse(stripJsonFence(text));
-    let bp = Number(parsed.blackPoint), wp = Number(parsed.whitePoint);
-    if(!isFinite(bp)) bp = 40;
-    if(!isFinite(wp)) wp = 235;
-    bp = Math.max(0, Math.min(120, bp));
-    wp = Math.max(bp+30, Math.min(255, wp));
-    aiCleanParams = {blackPoint:bp, whitePoint:wp};
-    activeFilter = "ai";
-    document.querySelectorAll(".filter-chip").forEach(c=>c.classList.toggle("on", c===chip));
-  }catch(err){
-    toast(err && err.message ? err.message : "Yapay zeka isteği başarısız oldu");
-  }finally{
-    chip.classList.remove("loading");
-  }
+/* ---------- sekmeler ---------- */
+function showTab(name){
+  closeMenu();
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.tab===name));
+  ['takip','urun','stok'].forEach(n=>$('tab-'+n).classList.toggle('hide',n!==name));
 }
-$("#chipAiClean").addEventListener("click", selectAiCleanFilter);
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>showTab(t.dataset.tab));
 
-/* ---- AI-assisted perspective correction (detect 4 page corners, warp flat) ---- */
-function base64FromCanvas(canvas, maxDim){
-  let c = canvas;
-  if(canvas.width > maxDim || canvas.height > maxDim){
-    const s = maxDim / Math.max(canvas.width, canvas.height);
-    c = document.createElement("canvas");
-    c.width = Math.round(canvas.width*s); c.height = Math.round(canvas.height*s);
-    c.getContext("2d").drawImage(canvas, 0, 0, c.width, c.height);
-  }
-  return c.toDataURL("image/jpeg", 0.82).split(",")[1];
-}
+function renderAll(){renderTop();renderStocks();renderProducts();renderGrid()}
 
-// Solve the 8x8 linear system for a projective homography from 4 point
-// correspondences (dst -> src), via Gaussian elimination with partial pivoting.
-function solveLinear8(A, b){
-  const n = 8;
-  const M = A.map((row,i)=> row.concat([b[i]]));
-  for(let col=0; col<n; col++){
-    let pivot = col;
-    for(let r=col+1;r<n;r++){ if(Math.abs(M[r][col]) > Math.abs(M[pivot][col])) pivot = r; }
-    const tmp = M[col]; M[col] = M[pivot]; M[pivot] = tmp;
-    const pv = M[col][col];
-    if(Math.abs(pv) < 1e-10) continue;
-    for(let c=col;c<=n;c++) M[col][c] /= pv;
-    for(let r=0;r<n;r++){
-      if(r===col) continue;
-      const factor = M[r][col];
-      if(factor === 0) continue;
-      for(let c=col;c<=n;c++) M[r][c] -= factor*M[col][c];
-    }
-  }
-  return M.map(row=>row[n]);
-}
-// Homography H (8 values, h8 implicit = 1) such that srcPts[i] = H(dstPts[i]).
-function computeHomography(dstPts, srcPts){
-  const A=[], b=[];
-  for(let i=0;i<4;i++){
-    const X=dstPts[i].x, Y=dstPts[i].y, u=srcPts[i].x, v=srcPts[i].y;
-    A.push([X,Y,1,0,0,0,-X*u,-Y*u]); b.push(u);
-    A.push([0,0,0,X,Y,1,-X*v,-Y*v]); b.push(v);
-  }
-  return solveLinear8(A,b);
-}
-function mapH(H, p){
-  const denom = H[6]*p.x + H[7]*p.y + 1;
-  return { x: (H[0]*p.x + H[1]*p.y + H[2])/denom, y: (H[3]*p.x + H[4]*p.y + H[5])/denom };
-}
-// Draws one source triangle onto ctx, affine-mapped onto the destination triangle.
-function drawWarpTriangle(ctx, img, s, d){
-  const denom = (s[1].x-s[0].x)*(s[2].y-s[0].y) - (s[2].x-s[0].x)*(s[1].y-s[0].y);
-  if(Math.abs(denom) < 1e-8) return;
-  const a = ((d[1].x-d[0].x)*(s[2].y-s[0].y) - (d[2].x-d[0].x)*(s[1].y-s[0].y)) / denom;
-  const b = ((d[1].y-d[0].y)*(s[2].y-s[0].y) - (d[2].y-d[0].y)*(s[1].y-s[0].y)) / denom;
-  const c = ((d[2].x-d[0].x)*(s[1].x-s[0].x) - (d[1].x-d[0].x)*(s[2].x-s[0].x)) / denom;
-  const e = ((d[2].y-d[0].y)*(s[1].x-s[0].x) - (d[1].y-d[0].y)*(s[2].x-s[0].x)) / denom;
-  const tx = d[0].x - a*s[0].x - c*s[0].y;
-  const ty = d[0].y - b*s[0].x - e*s[0].y;
-  ctx.save();
-  ctx.beginPath();
-  ctx.moveTo(d[0].x, d[0].y); ctx.lineTo(d[1].x, d[1].y); ctx.lineTo(d[2].x, d[2].y);
-  ctx.closePath();
-  ctx.clip();
-  ctx.transform(a, b, c, e, tx, ty);
-  ctx.drawImage(img, 0, 0);
-  ctx.restore();
-}
-// Warps the quadrilateral defined by 4 corners (fractions 0-1 of naturalW/H) so
-// it fills a straight rectangle, as if the page had been photographed head-on.
-// Generic: warps an arbitrary quad (fractions 0-1, keys tl/tr/br/bl) region of
-// any drawImage-able source (canvas/video/img) into a flat rectangle. Shared
-// by the crop screen's AI-align feature and the live auto-scan capture.
-function warpQuadFromSource(sourceEl, srcW, srcH, corners){
-  const srcQuad = ["tl","tr","br","bl"].map(k=>({x: corners[k].x*srcW, y: corners[k].y*srcH}));
-  const topW = dist(srcQuad[0], srcQuad[1]), botW = dist(srcQuad[3], srcQuad[2]);
-  const leftH = dist(srcQuad[0], srcQuad[3]), rightH = dist(srcQuad[1], srcQuad[2]);
-  const outW = Math.max(40, Math.round(Math.max(topW, botW)));
-  const outH = Math.max(40, Math.round(Math.max(leftH, rightH)));
-  const dstQuad = [{x:0,y:0},{x:outW,y:0},{x:outW,y:outH},{x:0,y:outH}];
-  const H = computeHomography(dstQuad, srcQuad); // dst -> src
-
-  const out = document.createElement("canvas");
-  out.width = outW; out.height = outH;
-  const octx = out.getContext("2d");
-  octx.fillStyle = "#e9e2d0"; octx.fillRect(0,0,outW,outH);
-  const GRID = 20;
-  for(let j=0;j<GRID;j++){
-    for(let i=0;i<GRID;i++){
-      const dx0 = outW*i/GRID, dx1 = outW*(i+1)/GRID;
-      const dy0 = outH*j/GRID, dy1 = outH*(j+1)/GRID;
-      const d00={x:dx0,y:dy0}, d10={x:dx1,y:dy0}, d11={x:dx1,y:dy1}, d01={x:dx0,y:dy1};
-      const s00=mapH(H,d00), s10=mapH(H,d10), s11=mapH(H,d11), s01=mapH(H,d01);
-      drawWarpTriangle(octx, sourceEl, [s00,s10,s11], [d00,d10,d11]);
-      drawWarpTriangle(octx, sourceEl, [s00,s11,s01], [d00,d11,d01]);
-    }
-  }
-  return out;
-}
-function warpQuadToRect(corners){
-  return warpQuadFromSource(els.cropImg, naturalW, naturalH, corners);
-}
-function quadLooksValid(c){
-  // basic sanity: all points in range and roughly in tl/tr/br/bl order (convex-ish)
-  const pts = ["tl","tr","br","bl"].map(k=>c[k]);
-  if(pts.some(p=>!p || !isFinite(p.x) || !isFinite(p.y))) return false;
-  if(pts.some(p=>p.x<-0.05||p.x>1.05||p.y<-0.05||p.y>1.05)) return false;
-  const area = Math.abs(
-    (pts[0].x*(pts[1].y-pts[3].y) + pts[1].x*(pts[2].y-pts[0].y) +
-     pts[2].x*(pts[3].y-pts[1].y) + pts[3].x*(pts[0].y-pts[2].y)) / 2
-  );
-  return area > 0.03; // page should cover a meaningful chunk of the frame
-}
-async function commitWarpedCanvas(canvas){
-  const bmp = await createImageBitmap(canvas);
-  if(sourceBitmap){ try{ sourceBitmap.close(); }catch(e){} }
-  sourceBitmap = bmp;
-  warpApplied = true;
-  rotationDeg = 0; flipped = false; fineRotationDeg = 0;
-  bakeWorkingCanvas();
-  resetView();
-  invalidateAiClean();
-}
-async function callAiAlign(){
-  if(!getApiKey()){
-    toast("Önce ayarlardan API anahtarı ekle");
-    els.apiKeyInput.value = "";
-    els.settingsMask.classList.add("active");
-    return;
-  }
-  const btn = $("#btnCropAi");
-  btn.classList.add("loading");
-  try{
-    const b64 = base64FromCanvas(els.cropImg, 1200);
-    const prompt = "This is a photo of a single page (paper/notebook sheet), possibly photographed at an angle "+
-      "so the page looks like a distorted quadrilateral instead of a straight rectangle, with some background "+
-      "(desk, table, other objects) around it. Find the four corners of the page itself, as precisely as possible, "+
-      "excluding the surrounding background. Respond with ONLY compact JSON, no markdown, no explanation: "+
-      '{"corners": {"tl": {"x":0-1,"y":0-1}, "tr": {"x":0-1,"y":0-1}, "br": {"x":0-1,"y":0-1}, "bl": {"x":0-1,"y":0-1}}} '+
-      "where x,y are fractions of the image width/height, and tl/tr/br/bl are the top-left, top-right, bottom-right "+
-      "and bottom-left corners of the page as a person reading it would orient it (text reads left-to-right, top-to-bottom).";
-    const text = await callGemini(prompt, b64);
-    const parsed = JSON.parse(stripJsonFence(text));
-    if(!parsed.corners || !quadLooksValid(parsed.corners)){
-      toast("Sayfa kenarları algılanamadı, köşelerden elle kırp");
-      return;
-    }
-    const warped = warpQuadToRect(parsed.corners);
-    await commitWarpedCanvas(warped);
-    toast("Perspektif düzeltildi");
-  }catch(err){
-    toast(err && err.message ? err.message : "Yapay zeka isteği başarısız oldu");
-  }finally{
-    btn.classList.remove("loading");
-  }
-}
-$("#btnCropAi").addEventListener("click", callAiAlign);
-
-function filterString(){
-  if(activeFilter === "bw") return "grayscale(1) contrast(1.35) brightness(1.12)";
-  if(activeFilter === "enhance") return "contrast(1.2) saturate(1.08) brightness(1.05)";
-  return "none";
-}
-
-// AI "clean scan": levels stretch using AI-suggested black/white points, applied
-// per-pixel on luminance so the paper background goes to white and ink goes to
-// black — a real (if modest) reconstruction step beyond a flat CSS filter.
-function applyAiCleanLevels(ctx, w, h, blackPoint, whitePoint){
-  const imgData = ctx.getImageData(0, 0, w, h);
-  const d = imgData.data;
-  const range = Math.max(1, whitePoint - blackPoint);
-  for(let i=0; i<d.length; i+=4){
-    for(let c=0; c<3; c++){
-      let v = d[i+c];
-      v = (v - blackPoint) / range * 255;
-      d[i+c] = v < 0 ? 0 : (v > 255 ? 255 : v);
-    }
-  }
-  ctx.putImageData(imgData, 0, 0);
-}
-
-function exportPage(useCropBox){
-  let sx=0, sy=0, sw=naturalW, sh=naturalH;
-  if(useCropBox){
-    const total = fitScale*userScale;
-    sx = (rect.x - pos.left)/total;
-    sy = (rect.y - pos.top)/total;
-    sw = rect.w/total;
-    sh = rect.h/total;
-    sx = Math.max(0, Math.min(naturalW-1, sx));
-    sy = Math.max(0, Math.min(naturalH-1, sy));
-    sw = Math.max(1, Math.min(naturalW-sx, sw));
-    sh = Math.max(1, Math.min(naturalH-sy, sh));
-  }
-  const out = document.createElement("canvas");
-  out.width = sw; out.height = sh;
-  const ctx = out.getContext("2d");
-  if(activeFilter === "ai" && aiCleanParams){
-    ctx.drawImage(els.cropImg, sx, sy, sw, sh, 0, 0, sw, sh);
-    applyAiCleanLevels(ctx, sw, sh, aiCleanParams.blackPoint, aiCleanParams.whitePoint);
-  } else {
-    ctx.filter = filterString();
-    ctx.drawImage(els.cropImg, sx, sy, sw, sh, 0, 0, sw, sh);
-  }
-  return new Promise((resolve)=> out.toBlob((blob)=>resolve(blob), "image/jpeg", 0.9));
-}
-
-async function saveCroppedPage(useCropBox){
-  const blob = await exportPage(useCropBox);
-  const pages = pagesByBook[scanTargetBookId] || [];
-  const page = {id: uid(), bookId: scanTargetBookId, order: pages.length, blob};
-  await idbPut("pages", page);
-  pages.push(page);
-  pagesByBook[scanTargetBookId] = pages;
-  updateScanCount();
-  toast("Sayfa kaydedildi");
-  if(sourceBitmap){ try{ sourceBitmap.close(); }catch(e){} sourceBitmap = null; }
-  showView("scan");
-  await startCamera();
-}
-$("#btnCropSave").addEventListener("click", ()=> saveCroppedPage(true));
-$("#btnCropSkip").addEventListener("click", ()=> saveCroppedPage(false));
-
-/* ============ INIT ============ */
-async function init(){
-  await openDB();
-  await loadLibrary();
-  if("serviceWorker" in navigator){
-    navigator.serviceWorker.register("sw.js").catch(()=>{});
-  }
-  if(screen.orientation && screen.orientation.lock){
-    screen.orientation.lock("portrait").catch(()=>{}); // no-op on iOS Safari; CSS rotate-gate covers it
-  }
-}
-init();
-
-})();
+/* ---------- başlangıç ---------- */
+resetForm();loadSettings();renderAll();initAlarmed();
+showTab('takip');
 </script>
 </body>
 </html>
