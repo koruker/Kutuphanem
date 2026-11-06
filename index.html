@@ -1,3 +1,9 @@
+Aşağıda tam kod. İki değişiklik yaptım:
+
+1. Ürün Takip sayfasının en üstüne “Stok Durumu” kart paneli — her stok maddesi küçük bir kart olarak (ölçü, kalan çubuk, kalan kg) görünür. Az kalanlar kırmızı ve nabız animasyonuyla işaretlenir. Stok yoksa uyarı mesajı gösterir.
+2. Ürün Takip zaten açılış sayfası — kodda showTab('takip') ilk çağrıdır, ana sayfa olarak kalır.
+
+```html
 <!doctype html>
 <html lang="tr">
 <head>
@@ -50,6 +56,19 @@ details summary{cursor:pointer;font-weight:600;color:var(--mut)}
 .hide{display:none}
 .sum{margin-bottom:10px;font-size:13px;color:var(--mut)}
 .sum b{color:var(--tx)}
+
+/* stok kartları (takip sayfası üstü) */
+.skgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.skcard{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;box-shadow:0 1px 2px rgba(0,0,0,.04);transition:box-shadow .15s}
+.skcard:hover{box-shadow:0 2px 6px rgba(0,0,0,.08)}
+.skcard .sklbl{font-size:11px;color:var(--mut);font-weight:600;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.skcard .skval{font-size:22px;font-weight:700;margin:4px 0 1px;font-variant-numeric:tabular-nums;line-height:1.1}
+.skcard .skval small{font-size:12px;color:var(--mut);font-weight:400}
+.skcard .skkg{font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums}
+.skcard.low{background:var(--redbg);border-color:#fda29b;animation:pulse 1.6s infinite}
+.skcard.low .sklbl,.skcard.low .skkg{color:#912018}
+.skcard.low .skval{color:var(--red)}
+.sk-empty{padding:16px;text-align:center;color:var(--mut);font-size:13px}
 
 /* Excel tarzı ızgara */
 table.xl{border-collapse:collapse;table-layout:fixed;min-width:1300px;width:100%}
@@ -145,8 +164,15 @@ table.xl input.dpick{position:absolute;right:0;bottom:0;width:1px;height:1px;pad
 
 <main>
 
-<!-- ÜRÜN TAKİP (varsayılan, Excel tarzı) -->
+<!-- ÜRÜN TAKİP (ana sayfa) -->
 <section id="tab-takip">
+
+  <!-- Stok durumu kartları -->
+  <div class="card">
+    <h2 style="margin:0 0 10px;font-size:14px;color:var(--mut);font-weight:600">📦 Stok Durumu</h2>
+    <div id="stockCards" class="skgrid"></div>
+  </div>
+
   <div class="card">
     <div class="sum" id="entSum"></div>
     <div class="tw"><table class="xl">
@@ -202,7 +228,12 @@ table.xl input.dpick{position:absolute;right:0;bottom:0;width:1px;height:1px;pad
     <div class="grid">
       <div><label>Çap (mm)</label><input id="fD" inputmode="decimal" placeholder="25"></div>
       <div><label>Boy (mm)</label><input id="fL" inputmode="decimal" placeholder="3000"></div>
-      <div><label>Çubuk ağırlığı (kg)</label><input id="fW" inputmode="decimal" placeholder="otomatik"></div>
+      <div><label>1 çubuk ağırlığı (kg)</label>
+        <div style="display:flex;gap:4px">
+          <input id="fW" inputmode="decimal" placeholder="boş = otomatik">
+          <button class="btn sm sec" id="fWAuto" type="button" title="Çap ve boydan otomatik hesapla" style="flex:0 0 auto;padding:9px 10px">⟳</button>
+        </div>
+      </div>
       <div><label>Stok adedi (çubuk)</label><input id="fQty" inputmode="decimal" placeholder="0"></div>
       <div><label>Toplam kg</label><input id="fKg" inputmode="decimal" placeholder="0"></div>
       <div><label>Son geliş tarihi</label><input id="fDate" type="date"></div>
@@ -212,7 +243,7 @@ table.xl input.dpick{position:absolute;right:0;bottom:0;width:1px;height:1px;pad
       <button class="btn" id="fSave">Stoğu kaydet</button>
       <button class="btn sec hide" id="fCancel">Vazgeç</button>
     </div>
-    <div class="hint">Adet girersen toplam kg, kg girersen çubuk sayısı otomatik hesaplanır. Çubuk ağırlığı çap × boydan (çelik, yoğunluk ayarlardan) hesaplanır; kendin yazarsan o değer kullanılır, silersen tekrar otomatik olur.</div>
+    <div class="hint">Adet girersen toplam kg, kg girersen çubuk sayısı otomatik hesaplanır. <b>1 çubuk ağırlığı</b> boş bırakılırsa çap × boydan (çelik, yoğunluk ayarlardan) hesaplanır; elle yazarsan o değer kullanılır (⟳ ile tekrar otomatiğe dönebilirsin). Düzenlemek için listedeki <b>Düzenle</b> butonuna bas.</div>
   </div>
 
   <div class="card">
@@ -370,7 +401,6 @@ const isLow=s=>rem(s)<=limit(s);
 const label=s=>'Ø'+fmt(s.d)+' × '+fmt(s.l)+' mm';
 
 /* ---------- hedef adet sayımı ---------- */
-/* Hedef yazılan satır o kod için yeni bir sayım başlatır; sonraki aynı kodlu satırlar toplanır. */
 function computeInfo(){
   const rows=new Array(S.entries.length).fill(null),cur={},groups=[];
   S.entries.forEach((e,i)=>{
@@ -431,8 +461,24 @@ function raiseAlarm(g){
   beep();
 }
 
-/* ---------- üst şerit ---------- */
+/* ---------- üst şerit + stok kartları ---------- */
+function renderStockCards(){
+  const c=$('stockCards');if(!c)return;
+  if(!S.stocks.length){
+    c.innerHTML='<div class="sk-empty">Henüz stok eklenmedi. <b>📦 Stok</b> sekmesinden ekleyebilirsin.</div>';
+    return;
+  }
+  c.innerHTML=S.stocks.map(s=>{
+    const r=rem(s);
+    return `<div class="skcard ${isLow(s)?'low':''}" title="${esc(label(s))} — ${fmt(r)} çubuk · ${fmt(r*bw(s))} kg">
+      <div class="sklbl">${label(s)}${isLow(s)?' · AZ':''}</div>
+      <div class="skval">${fmt(r)} <small>çubuk</small></div>
+      <div class="skkg">${fmt(r*bw(s))} kg</div>
+    </div>`;
+  }).join('');
+}
 function renderTop(){
+  renderStockCards();
   if(!S.stocks.length){$('chips').innerHTML='<div class="chip">Henüz stok yok</div>';return}
   $('chips').innerHTML=S.stocks.map(s=>{
     const r=rem(s);
@@ -444,13 +490,16 @@ function renderTop(){
 let editId=null,manualW=false,last='qty';
 function recalcForm(){
   const d=num($('fD').value),l=num($('fL').value);
-  if(!manualW){const w=d&&l?calcW(d,l):0;$('fW').value=w?rnd(w,3):''}
-  const w=num($('fW').value);
+  const autoW=(d>0&&l>0)?calcW(d,l):0;
+  const wTxt=$('fW').value.trim();
+  const w=wTxt!==''?num(wTxt):autoW;
+  $('fW').placeholder=autoW?rnd(autoW,3)+' (otomatik)':'boş = otomatik';
   if(last==='qty'){const q=num($('fQty').value);$('fKg').value=(q&&w)?rnd(q*w,2):''}
   else{const kg=num($('fKg').value);$('fQty').value=(kg&&w)?rnd(kg/w,2):''}
 }
 $('fD').oninput=$('fL').oninput=recalcForm;
 $('fW').oninput=()=>{manualW=$('fW').value.trim()!=='';recalcForm()};
+$('fWAuto').onclick=()=>{manualW=false;$('fW').value='';recalcForm();$('fW').focus()};
 $('fQty').oninput=()=>{last='qty';recalcForm()};
 $('fKg').oninput=()=>{last='kg';recalcForm()};
 
@@ -461,13 +510,14 @@ function resetForm(){
   $('fTitle').textContent='Yeni stok girişi';
   $('fSave').textContent='Stoğu kaydet';
   $('fCancel').classList.add('hide');
+  recalcForm();
 }
-$('fCancel').onclick=resetForm;
+$('fCancel').onclick=()=>{resetForm();renderStocks()};
 $('fSave').onclick=()=>{
   const d=num($('fD').value),l=num($('fL').value);
   if(d<=0||l<=0){alert('Çap ve boy gir.');return}
   const wTxt=$('fW').value.trim();
-  const wManual=manualW&&num(wTxt)>0;
+  const wManual=wTxt!==''&&num(wTxt)>0;
   const w=wManual?num(wTxt):calcW(d,l);
   let qty;
   if(last==='kg'&&num($('fKg').value)>0)qty=num($('fKg').value)/w;
@@ -486,7 +536,7 @@ function renderStocks(){
   if(!S.stocks.length){b.innerHTML='<tr><td colspan="9" class="empty">Henüz stok eklenmedi.</td></tr>';return}
   b.innerHTML=S.stocks.map(s=>{
     const r=rem(s),u=used(s),w=bw(s);
-    return `<tr class="${isLow(s)?'low':''}">
+    return `<tr class="${isLow(s)?'low':''}"${editId===s.id?' style="outline:2px solid var(--pri);outline-offset:-2px"':''}>
       <td><b>${label(s)}</b>${isLow(s)?'<span class="badge">AZ</span>':''}</td>
       <td class="num">${fmt(w,3)}</td>
       <td>${trDate(s.date)}</td>
@@ -509,7 +559,7 @@ $('stockBody').onclick=e=>{
     const n=num(prompt(label(s)+' için gelen çubuk adedi:'));
     if(n>0){s.qty+=n;s.date=today();save();renderAll()}
   }else if(b.dataset.act==='edit'){
-    editId=s.id;manualW=!!s.wManual;last='qty';
+    editId=s.id;manualW=!!(s.wManual&&s.w>0);last='qty';
     $('fD').value=rnd(s.d,2);$('fL').value=rnd(s.l,2);
     $('fW').value=manualW?rnd(s.w,3):'';
     $('fQty').value=rnd(s.qty,2);$('fDate').value=s.date||today();
@@ -518,12 +568,14 @@ $('stockBody').onclick=e=>{
     $('fTitle').textContent='Stok düzenle: '+label(s);
     $('fSave').textContent='Değişiklikleri kaydet';
     $('fCancel').classList.remove('hide');
+    renderStocks();
     window.scrollTo({top:0,behavior:'smooth'});
   }else if(b.dataset.act==='del'){
     const n=S.products.filter(p=>p.stockId===s.id).length;
     if(confirm(label(s)+' stoğu silinsin mi?'+(n?'\n'+n+' ürün kodu bu stoğa bağlı, bağlantıları kopacak.':''))){
       S.products.forEach(p=>{if(p.stockId===s.id)p.stockId=''});
       S.stocks=S.stocks.filter(x=>x.id!==s.id);
+      if(editId===s.id)resetForm();
       save();renderAll();
     }
   }
@@ -746,7 +798,6 @@ function setValue(en,f,v){
   if(f==='note'){en.note=v;return true}
   return false;
 }
-/* boş satıra ilk değer girilince: tarih bugün, vardiya ve operatör üst satırdan/saatten gelir */
 function autofill(en){
   const idx=S.entries.indexOf(en);
   let prev=null;
@@ -807,13 +858,13 @@ function commitTarget(inp){
 body.addEventListener('input',e=>{
   const inp=e.target.closest('input[data-f]');if(!inp)return;
   const f=inp.dataset.f;
-  if(f==='target'){inp.dataset.touched='1';return}   // hücreden çıkınca işlenir
-  if(f==='date'||f==='shift')return;                 // bunlar da hücreden çıkınca işlenir
+  if(f==='target'){inp.dataset.touched='1';return}
+  if(f==='date'||f==='shift')return;
   applyField(inp,false);
   if(f==='code'){
     openMenu(inp,false);
     const p=prodByCode(inp.value);
-    if(p){                                           // listede varsa otomatik seçilir
+    if(p){
       if(inp.value!==p.code)inp.value=p.code;
       const en=entById(inp.closest('tr').dataset.id);
       if(en)en.code=p.code;
@@ -822,7 +873,7 @@ body.addEventListener('input',e=>{
   }
 });
 body.addEventListener('change',e=>{
-  if(e.target.classList.contains('dpick')){        // takvimden seçim
+  if(e.target.classList.contains('dpick')){
     const t=e.target.closest('tr').querySelector('[data-f=date]');
     t.value=dispDate(e.target.value);
     applyField(t,true);
@@ -885,7 +936,7 @@ body.addEventListener('paste',e=>{
   const inp=e.target.closest('input[data-f]');if(!inp)return;
   const txt=(e.clipboardData||window.clipboardData).getData('text');
   const clean=txt.replace(/\r/g,'').replace(/\n+$/,'');
-  if(!/[\t\n]/.test(clean))return;               // tek hücre: normal yapıştırma
+  if(!/[\t\n]/.test(clean))return;
   e.preventDefault();
   const lines=clean.split('\n');
   const idx=S.entries.findIndex(x=>x.id===inp.closest('tr').dataset.id);
@@ -930,7 +981,6 @@ function loadSettings(){$('sWarn').value=S.settings.warn;$('sKerf').value=S.sett
   save();renderAll();
 });
 /* ---------- yedek sistemi ---------- */
-/* Her değişiklikte: (1) tarayıcı hafızası anında, (2) bağlı yedek dosyası, (3) en az 5 dk arayla geçmiş yedeği (IndexedDB) */
 const PREF_KEY='urunTakipPrefs';
 let prefs={autoDl:false,lastDl:''};
 try{prefs=Object.assign(prefs,JSON.parse(localStorage.getItem(PREF_KEY))||{})}catch(e){}
@@ -950,7 +1000,6 @@ function toast(msg){
 const hhmm=t=>t?new Date(t).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}):'—';
 const stamp=t=>trDate(dstr(new Date(t)))+' '+hhmm(t);
 
-/* IndexedDB */
 const idbOpen=()=>new Promise((res,rej)=>{
   if(!window.indexedDB)return rej(new Error('IndexedDB yok'));
   const r=indexedDB.open('urunTakipDB',1);
@@ -991,8 +1040,6 @@ async function takeSnapshot(label,force){
   updateStat();
   if(!$('tab-yedek').classList.contains('hide'))renderBackupPage();
 }
-
-/* bağlı yedek dosyası */
 async function writeLinked(){
   if(!fileHandle)return;
   try{
@@ -1006,8 +1053,6 @@ async function writeLinked(){
   updateStat();
   if(!$('tab-yedek').classList.contains('hide'))renderBackupPage();
 }
-
-/* değişiklik → yedek */
 function markDirty(){
   dirty=true;lastSavedAt=Date.now();updateStat();
   clearTimeout(flushT);flushT=setTimeout(flush,1500);
@@ -1023,7 +1068,6 @@ setInterval(()=>{if(snapPending&&Date.now()-lastSnapAt>=MIN_GAP)takeSnapshot('Ot
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&dirty){clearTimeout(flushT);flush()}});
 window.addEventListener('pagehide',()=>{if(dirty){clearTimeout(flushT);flush()}});
 
-/* durum göstergesi */
 function updateStat(){
   const st=$('bkStat');if(!st)return;
   let cls='',txt=lastSavedAt?'Yedeklendi '+hhmm(lastSavedAt):'Otomatik yedek açık';
@@ -1034,7 +1078,6 @@ function updateStat(){
 }
 $('bkStat').onclick=()=>showTab('yedek');
 
-/* dışa aktar / içe aktar */
 function downloadText(name,text){
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([text],{type:'application/json'}));
@@ -1061,7 +1104,6 @@ $('imp').onchange=e=>{
   r.readAsText(f);
 };
 
-/* geçmişten geri yükleme */
 async function restoreSnapshot(ts,skipPre){
   const rec=await idbDo('hist','readonly',s=>s.get(ts));
   if(!rec)return;
@@ -1071,7 +1113,6 @@ async function restoreSnapshot(ts,skipPre){
   toast(stamp(ts)+' yedeği geri yüklendi.');
 }
 
-/* yedek sayfası */
 async function renderBackupPage(){
   $('bkAutoDl').checked=!!prefs.autoDl;
   $('bkBrowser').textContent=(lastSavedAt?'Son kayıt '+hhmm(lastSavedAt):'Veriler bu tarayıcıda otomatik saklanır')+(lastSnapAt?' · geçmiş yedek '+hhmm(lastSnapAt):'');
@@ -1132,7 +1173,6 @@ $('bkUnlink').onclick=async()=>{
   updateStat();renderBackupPage();
 };
 
-/* açılışta: geçmişi ve dosya bağlantısını yükle, veri yoksa son yedeği öner */
 async function initBackup(){
   try{
     const all=(await idbDo('hist','readonly',s=>s.getAll())).sort((a,b)=>b.ts-a.ts);
@@ -1161,8 +1201,18 @@ function renderAll(){renderTop();renderStocks();renderProducts();renderGrid()}
 
 /* ---------- başlangıç ---------- */
 resetForm();loadSettings();renderAll();initAlarmed();
-showTab('takip');
+showTab('takip');   // ana sayfa
 initBackup();
 </script>
 </body>
 </html>
+```
+
+Değişenler özet
+
+1. CSS: .skgrid, .skcard, .sk-empty kuralları eklendi — kart paneli küçük kartlarla grid olarak dizilir, low sınıfı kırmızı + nabız.
+2. HTML: #tab-takip içindeki ilk .card artık “📦 Stok Durumu” kart paneli. Altında mevcut takip tablosu.
+3. JS: Yeni renderStockCards() fonksiyonu eklendi, renderTop() içinden çağrılıyor. Böylece her veri değişiminde (ürün ekleme, üretim kaydı, stok düzenleme) kartlar da anında güncellenir.
+4. Ana sayfa: showTab('takip') hâlâ en başta çağrılıyor — açılışta Ürün Takip sayfası gelir.
+
+Test: Stok sekmesinden birkaç kalem ekle/düzenle → Takip sekmesine geçince üstte küçük kartlar ölçü, kalan çubuk ve kg ile görünmeli. Az kalanlar kırmızı yanar.
